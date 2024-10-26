@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+<h:head>
+    <h:outputStylesheet name="css/login.css"/>
+    <style>
+        .registration-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: pink;
+            font-family: 'Roboto', sans-serif;
+            text-align: center;
+        }
+        .registration-info {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 20px;
+            font-family: 'Open Sans', sans-serif;
+        }
+    </style>
+</h:head>
+<h:body>
+    <h:messages id="messages" globalOnly="false" styleClass="error-message" />
+    <h:form styleClass="form-container">
+        <h2 class="registration-title">Регистрация</h2>
+        <p class="registration-info">Придумайте имя до 10 символов и пароль</p>
+        <h:panelGrid columns="2" styleClass="panel-grid">
+            <h:outputLabel for="username" value="Username:" />
+            <h:inputText id="username" value="#{userBean.username}" maxlength="10" styleClass="input-text" />
+
+            <h:outputLabel for="password" value="Password:" />
+            <h:inputSecret id="password" value="#{userBean.password}" styleClass="input-secret" />
+
+            <h:commandButton value="Создать" action="#{userBean.register}" styleClass="command-button" render="@form messages"/>
+            <h:commandButton value="Назад" action="login?faces-redirect=true" styleClass="command-button" />
+        </h:panelGrid>
+    </h:form>
+</h:body>
+</html>

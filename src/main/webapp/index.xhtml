@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+<h:head>
+    <title>Book Creature Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+    <h:outputStylesheet name="css/main.css"/>
+    <script src="js/numbers_format.js"></script>
+    <script src="js/notifications.js"></script>
+    <script>
+        function openModal() {
+            document.getElementById('notificationModal').style.display = 'block';
+            document.getElementById('adminRequestStatus').innerText = "#{userBean.adminRequestStatus}";
+        }
+
+        function closeModal() {
+            document.getElementById('notificationModal').style.display = 'none';
+        }
+
+        function getMaxCoordinates() {
+            let maxX = 100;
+            let maxY = 100;
+
+            const creatureElements = document.querySelectorAll('.book-creature-canvas');
+            creatureElements.forEach(function(canvas) {
+                const x = parseInt(canvas.getAttribute('data-x'));
+                const y = parseInt(canvas.getAttribute('data-y'));
+
+                if (x > maxX) maxX = x;
+                if (y > maxY) maxY = y;
+            });
+
+            return { maxX, maxY };
+        }
+        function adjustCanvasSize(canvas, maxX, maxY, paddingFactor) {
+            canvas.width = (maxX + 20) * paddingFactor;
+            canvas.height = (maxY + 20) * paddingFactor;
+        }
+
+        function drawGrid(ctx, canvasWidth, canvasHeight, maxX, maxY, axisOffset) {
+            const gridSize = 10;
+
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+
+            for (let i = 0; i &lt;= gridSize; i++) {
+                const x = (canvasWidth - axisOffset) * (i / gridSize) + axisOffset;
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvasHeight);
+                ctx.stroke();
+                ctx.closePath();
+                ctx.fillStyle = '#000';
+                ctx.font = '10px Arial';
+                ctx.fillText(((maxX / gridSize) * i).toFixed(0), x + 2, 10);
+            }
+
+            for (let i = 0; i &lt;= gridSize; i++) {
+                const y = (canvasHeight - axisOffset) * (i / gridSize) + axisOffset;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvasWidth, y);
+                ctx.stroke();
+                ctx.closePath();
+                ctx.fillStyle = '#000';
+                ctx.font = '10px Arial';
+                ctx.fillText(((maxY / gridSize) * i).toFixed(0), 2, y - 2);
+            }
+
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+
+
+            ctx.beginPath();
+            ctx.moveTo(axisOffset, canvasHeight - axisOffset);
+            ctx.lineTo(canvasWidth, canvasHeight - axisOffset);
+            ctx.stroke();
+
+
+            ctx.beginPath();
+            ctx.moveTo(axisOffset, 0);
+            ctx.lineTo(axisOffset, canvasHeight);
+            ctx.stroke();
+        }
+
+        function getMaxCoordinates() {
+            let maxX = 100;
+            let maxY = 100;
+
+            const creatureElements = document.querySelectorAll('.book-creature-canvas');
+            creatureElements.forEach(function(canvas) {
+                const x = parseInt(canvas.getAttribute('data-x'));
+                const y = parseInt(canvas.getAttribute('data-y'));
+
+                if (x > maxX) maxX = x;
+                if (y > maxY) maxY = y;
+            });
+
+            return { maxX, maxY };
+        }
+
+        function drawBookCreature(canvasId, x, y, creatureType, color, maxX, maxY, paddingFactor, axisOffset) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            const radius = 10;
+
+            const canvasX = (x / maxX) * (canvas.width - axisOffset) + axisOffset/1.9;
+            const canvasY = (y / maxY) * (canvas.height - axisOffset) + axisOffset/1.9;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawGrid(ctx, canvas.width, canvas.height, maxX, maxY, paddingFactor, axisOffset);
+
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(canvasX, canvasY, radius, 0, 2 * Math.PI);
+            ctx.fill();
+
+            ctx.fillStyle = 'black';
+            ctx.font = '12px Arial';
+            ctx.fillText(creatureType, canvasX + radius + 5, canvasY + 5);
+        }
+
+        function drawAllBookCreatures() {
+            const { maxX, maxY } = getMaxCoordinates();
+
+            const axisPadding = 500;
+            const adjustedMaxX = maxX + axisPadding;
+            const adjustedMaxY = maxY + axisPadding;
+
+            const fixedCanvasSize = 300;
+
+            const axisOffset = 20;
+
+            const creatureElements = document.querySelectorAll('.book-creature-canvas');
+            creatureElements.forEach(function(canvas) {
+                const ctx = canvas.getContext('2d');
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                canvas.width = fixedCanvasSize;
+                canvas.height = fixedCanvasSize;
+
+                drawGrid(ctx, canvas.width, canvas.height, adjustedMaxX, adjustedMaxY, axisOffset, axisPadding);
+
+                const x = parseInt(canvas.getAttribute('data-x'));
+                const y = parseInt(canvas.getAttribute('data-y'));
+                const creatureType = canvas.getAttribute('data-creature-type');
+                const userColor = canvas.getAttribute('data-user-color');
+
+                drawBookCreature(canvas.id, x, y, creatureType, userColor, adjustedMaxX, adjustedMaxY, 1, axisOffset);
+            });
+        }
+
+        function showTooltip(event, creature) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.style.display = 'block';
+            tooltip.style.left = event.pageX + 10 + 'px';
+            tooltip.style.top = event.pageY + 10 + 'px';
+        }
+
+        function hideTooltip() {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.style.display = 'none';
+        }
+
+        function openCreatureModal(creature) {
+            document.getElementById('creatureModal').style.display = 'block';
+            document.getElementById('creatureModalId').innerText = creature.id;
+            document.getElementById('creatureModalName').innerText = creature.name;
+            document.getElementById('creatureModalType').innerText = creature.type;
+        }
+
+        function closeCreatureModal() {
+            document.getElementById('creatureModal').style.display = 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            drawAllBookCreatures();
+            const creatureElements = document.querySelectorAll('.book-creature-canvas');
+
+            creatureElements.forEach(function(canvas) {
+                const creatureId = canvas.getAttribute('data-id');
+                const creatureName = canvas.getAttribute('data-name');
+                const creatureType = canvas.getAttribute('data-creature-type');
+
+                canvas.addEventListener('mouseover', function(event) {
+                    showTooltip(event, { id: creatureId, name: creatureName, type: creatureType });
+                });
+
+                canvas.addEventListener('mouseout', hideTooltip);
+
+                canvas.addEventListener('click', function() {
+                    openCreatureModal({ id: creatureId, name: creatureName, type: creatureType });
+                });
+            });
+        });
+
+        function toggleVisualization() {
+            const visualizationDiv = document.getElementById('creatureVisualization');
+            if (visualizationDiv.style.display === 'none' || visualizationDiv.style.display === '') {
+                visualizationDiv.style.display = 'block';
+            } else {
+                visualizationDiv.style.display = 'none';
+            }
+        }
+
+    </script>
+</h:head>
+<h:body>
+    <h:form>
+        <div class="user-info">
+            <div class="user-details">
+                <span>#{userBean.user.id}</span>
+                <h:graphicImage value="/resources/images/user.png" alt="Avatar" style="width: 60px; height: 60px;" />
+                <span>#{userBean.username}</span>
+                <h:commandLink action="#{userBean.loginPage}" rendered="#{!bookCreatureBean.isUserLoggedIn()}" styleClass="login-link">
+                    <h:graphicImage value="/resources/images/login.png" alt="Войти" />
+                </h:commandLink>
+                <h:commandLink action="#{userBean.logout}" rendered="#{bookCreatureBean.isUserLoggedIn()}" styleClass="logout-link">
+                    <h:graphicImage value="/resources/images/logout.png" alt="Выйти" />
+                </h:commandLink>
+            </div>
+
+            <h:commandButton value="Заявки на администраторов"
+                             action="admin_request?faces-redirect=true"
+                             rendered="#{userBean.isAdmin()}"
+                             styleClass="#{adminRequestBean.hasPendingRequests() ? 'blinking-button' : ''}"
+                             style="background-color: red;"/>
+
+            <h:commandButton value="Хочу стать админом" action="#{userBean.requestAdminRole}" rendered="#{bookCreatureBean.isUserLoggedIn() and !userBean.isAdmin()}"
+                             styleClass="admin-button" />
+        </div>
+        <h:commandLink onclick="openModal(); return false;" rendered="#{bookCreatureBean.isUserLoggedIn()}" styleClass="notification-icon">
+            <h:graphicImage value="/resources/images/notification.png" alt="Уведомления" style="width: 30px; height: 30px;" />
+        </h:commandLink>
+    </h:form>
+
+    <div id="message" style="display: none; margin-top: 30px;">
+        <span class="close-message" onclick="closeMessage()">×</span>
+        <span id="messageText"></span>
+    </div>
+
+    <div id="notificationModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">×</span>
+            <p>Ваши уведомления:</p>
+            <p id="adminRequestStatus">#{userBean.adminRequestStatus}</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <h:form>
+            <h:messages id="messages" styleClass="error-message" />
+            <h2>Book Creature Table</h2>
+            <h:dataTable styleClass="bordered results" value="#{bookCreatureBean.paginatedResponse.data}" var="bookCreature">
+                <h:column>
+                    <f:facet name="header">
+                        <h:commandLink value="ID" action="#{bookCreatureBean.sort('id')}" />
+                        <h:inputText value="#{bookCreatureBean.filterId}" styleClass="filter-input"/>
+                    </f:facet>
+                    <h:outputText value="#{bookCreature.id}" styleClass="number-cell" />
+                </h:column>
+                <h:column>
+                    <f:facet name="header">
+                        <h:commandLink value="Name" action="#{bookCreatureBean.sort('name')}" />
+                        <h:inputText value="#{bookCreatureBean.filterName}" styleClass="filter-input"/>
+                    </f:facet>
+                    #{bookCreature.name}
+                </h:column>
+                <h:column>
+                    <f:facet name="header">
+                        <h:commandLink value="Coordinates" action="#{bookCreatureBean.sort('coordinates')}" />
+                        <h:inputText value="#{bookCreatureBean.filterCoordinatesX}" styleClass="filter-input"/>
+                        <h:inputText value="#{bookCreatureBean.filterCoordinatesY}" styleClass="filter-input"/>
+                    </f:facet>
+                    <h:outputText value="#{bookCreature.coordinates.x}" styleClass="number-cell" />,
+                    <h:outputText value="#{bookCreature.coordinates.y}" styleClass="number-cell" />
+                </h:column>
+                <h:column>
+                    <f:facet name="header">
+                        <h:commandLink value="Creation Date" action="#{bookCreatureBean.sort('creationDate')}" />
+                        <h:inputText value="#{bookCreatureBean.filterCreationDate}" styleClass="filter-input" />
+                    </f:facet>
+                    <h:outputText value="#{bookCreatureBean.formatDate(bookCreature.creationDate)}">
+                        <f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss" />
+                    </h:outputText>
+                </h:column>
+                <h:column>
+                    <f:facet name="header">
+                        <h:commandLink value="Age" action="#{bookCreatureBean.sort('age')}" />
+                        <h:inputText value="#{bookCreatureBean.filterAge}" styleClass="filter-input" />
+                    </f:facet>
+                    <h:outputText value="#{bookCreature.age}" styleClass="number-cell" />
+                </h:column>
+                <h:column>
+                    <f:facet name="header">
+                        <h:commandLink value="Creature Type" action="#{bookCreatureBean.sort('creatureType')}" />
+                        <h:inputText value="#{bookCreatureBean.filterCreatureType}" styleClass="filter-input"/>
+                    </f:facet>
+                    #{bookCreature.creatureType}
+                </h:column>
+                <h:column>
+                    <f:facet name="header">
+                        <h:commandLink value="Creature Location" action="#{bookCreatureBean.sort('creatureLocation')}" />
+                        <h:inputText value="#{bookCreatureBean.filterCreatureLocation}" styleClass="filter-input"/>
+                    </f:facet>
+                    <h:outputText value="#{bookCreature.creatureLocation.id}" styleClass="number-cell" />
+                </h:column>
+                <h:column>
+                    <f:facet name="header">
+                        <h:commandLink value="Attack Level" action="#{bookCreatureBean.sort('attackLevel')}" />
+                        <h:inputText value="#{bookCreatureBean.filterAttackLevel}" styleClass="filter-input"/>
+                    </f:facet>
+                    <h:outputText value="#{bookCreature.attackLevel}" styleClass="number-cell" />
+                </h:column>
+                <h:column>
+                    <f:facet name="header">
+                        <h:commandLink value="Defense Level" action="#{bookCreatureBean.sort('defenseLevel')}" />
+                        <h:inputText value="#{bookCreatureBean.filterDefenseLevel}" styleClass="filter-input"/>
+                    </f:facet>
+                    <h:outputText value="#{bookCreature.defenseLevel}" styleClass="number-cell" />
+                </h:column>
+                <h:column>
+                    <f:facet name="header">
+                        <h:commandLink value="Ring" action="#{bookCreatureBean.sort('ring')}" />
+                        <h:inputText value="#{bookCreatureBean.filterRing}" styleClass="filter-input"/>
+                    </f:facet>
+                    <h:outputText value="#{bookCreature.ring.id}" styleClass="number-cell" />
+                </h:column>
+                <h:column>
+                    <f:facet name="header">Actions</f:facet>
+                    <div class="action-container">
+                        <h:commandButton value="✎" action="#{bookCreatureBean.edit(bookCreature.id)}"
+                                         rendered="#{bookCreature.user.id eq userBean.user.id or userBean.user.role eq 'ADMIN'}"
+                                         styleClass="action-button" />
+                        <h:commandButton value="✖" action="#{bookCreatureBean.delete(bookCreature.id)}"
+                                         rendered="#{bookCreature.user.id eq userBean.user.id or userBean.user.role eq 'ADMIN'}"
+                                         styleClass="action-button" />
+                    </div>
+                    <h:commandLink value="?" action="#{bookCreatureBean.getBookCreatureInfoById(bookCreature.id)}"
+                                   styleClass="action-button info-button" />
+                </h:column>
+            </h:dataTable>
+
+            <h:commandButton value="&#8592;" action="#{bookCreatureBean.previousPage}" disabled="#{bookCreatureBean.paginatedResponse.page == 1}" />
+            <h:commandButton value="&#8594;" action="#{bookCreatureBean.nextPage}" disabled="#{bookCreatureBean.paginatedResponse.page * bookCreatureBean.paginatedResponse.pageSize >= bookCreatureBean.paginatedResponse.total}" />
+            <h:commandButton value="Добавить объект" action="addBookCreature?faces-redirect=true" styleClass="back-button" rendered="#{bookCreatureBean.isUserLoggedIn()}"/>
+            <h:commandButton value="Специальные операции" action="special_operations?faces-redirect=true" styleClass="back-button" rendered="#{bookCreatureBean.isUserLoggedIn()}"/>
+        </h:form>
+
+        <h:form>
+            <div style="text-align: center; margin-top: 20px;">
+                <h:commandButton value="Визуализация объектов" styleClass="back-button" onclick="toggleVisualization(); return false;" />
+            </div>
+            <div id="creatureVisualization" class="creature-visualization" style="display: none;">
+                <div class="creature-container">
+                    <ui:repeat value="#{bookCreatureBean.paginatedResponse.data}" var="bookCreature">
+                        <div class="creature-item">
+                            <canvas id="bookCreatureCanvas-#{bookCreature.id}" class="book-creature-canvas" width="300" height="300"
+                                    data-x="#{bookCreature.coordinates.x}"
+                                    data-y="#{bookCreature.coordinates.y}"
+                                    data-id="#{bookCreature.id}"
+                                    data-name="#{bookCreature.name}"
+                                    data-creature-type="#{bookCreature.creatureType}"
+                                    data-user-color="#{bookCreature.user.color}"></canvas>
+                            <h:commandButton value="✎" action="#{bookCreatureBean.edit(bookCreature.id)}"
+                                             rendered="#{bookCreature.user.id eq userBean.user.id or userBean.user.role eq 'ADMIN'}"
+                                             styleClass="action-button" />
+                        </div>
+                    </ui:repeat>
+                </div>
+            </div>
+
+
+        </h:form>
+
+
+        <h:form>
+            <div style="text-align: center; margin-top: 20px;">
+                <h:commandButton value="Создать город" action="magicCity?faces-redirect=true" styleClass="large-button" rendered="#{bookCreatureBean.isUserLoggedIn()}"/>
+                <h:commandButton value="Создать кольцо" action="ring?faces-redirect=true" styleClass="large-button" rendered="#{bookCreatureBean.isUserLoggedIn()}"/>
+                <h:commandButton value="История" action="history?faces-redirect=true" styleClass="large-button"/>
+                <h:commandButton value="Все объекты BookCreature" action="users?faces-redirect=true" styleClass="large-button"/>
+            </div>
+        </h:form>
+    </div>
+
+    <div id="creatureModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeCreatureModal()">×</span>
+            <h2>Creature Details</h2>
+            <p><strong>ID:</strong> <span id="creatureModalId"></span></p>
+            <p><strong>Name:</strong> <span id="creatureModalName"></span></p>
+            <p><strong>Type:</strong> <span id="creatureModalType"></span></p>
+
+        </div>
+    </div>
+
+
+    <div id="tooltip" style="display: none; position: absolute; background-color: #333; color: #fff; padding: 5px; border-radius: 3px;"></div>
+</h:body>
+</html>

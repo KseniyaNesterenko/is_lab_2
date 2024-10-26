@@ -1,0 +1,453 @@
+
+
+.bordered {
+    border-radius: 10px;
+    overflow: hidden;
+    border-collapse: collapse;
+    width: 100%;
+    max-width: 100%; /* Ограничиваем ширину таблицы */
+    margin: 20px 0;
+    table-layout: fixed; /* Фиксированная ширина колонок */
+}
+
+.bordered th, .bordered td {
+    border: 1px solid #ddd;
+    padding: 4px; /* Уменьшаем отступы */
+    text-align: left;
+    font-size: 12px; /* Уменьшаем размер шрифта */
+    word-wrap: break-word; /* Перенос слов */
+}
+
+.bordered th {
+    background-color: #f2f2f2;
+}
+
+.results {
+    margin: 20px 0;
+}
+
+.results th, .results td {
+    padding: 8px; /* Уменьшаем отступы */
+    text-align: center;
+    font-size: 12px; /* Уменьшаем размер шрифта */
+}
+
+.results th {
+    background-color: #f09eae;
+    color: white;
+}
+
+.filter-input {
+    display: block;
+    margin-top: 5px; /* или любое другое значение, которое вам нужно */
+}
+
+
+/* Стили для формы */
+/* main.css */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #ffe6e6; /* Розовый фон */
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    width: 80%;
+    margin: 30px auto 0 auto; /* Центрируем контейнер по горизонтали */
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    align-items: center;
+}
+
+
+h2 {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.h\:panelGrid {
+    margin-bottom: 20px;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.h\:panelGrid .h\:outputLabel {
+    font-weight: bold;
+    margin-right: 10px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    background-color: #ff69b4; /* Розовый цвет заголовков */
+    color: #fff;
+}
+
+.h\:panelGrid .h\:inputText,
+.h\:panelGrid .h\:selectOneMenu {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.h\:panelGrid .h\:message {
+    color: red;
+    margin-top: 5px;
+}
+
+.h\:commandButton {
+    background-color: #ff69b4; /* Розовый цвет кнопки */
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 20px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.h\:commandButton:hover {
+    background-color: #ff1493; /* Темно-розовый цвет при наведении */
+    transform: scale(1.05); /* Увеличение при наведении */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    font-size: 14px; /* Уменьшенный размер шрифта */
+}
+
+table, th, td {
+    border: 1px solid #ddd;
+}
+
+th, td {
+    padding: 8px; /* Уменьшенный отступ */
+    text-align: left;
+}
+
+th {
+    background-color: #ff69b4; /* Розовый цвет заголовков */
+    color: #fff;
+}
+
+td {
+    background-color: #f9f9f9; /* Светло-серый фон ячеек */
+}
+
+/* main.css */
+.back-button {
+    background-color: #ff69b4; /* Розовый цвет кнопки */
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 20px;
+    margin-right: 10px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.back-button:hover {
+    background-color: #ff1493; /* Темно-розовый цвет при наведении */
+    transform: scale(1.05); /* Увеличение при наведении */
+}
+
+.blinking-button {
+    animation: blink 1s infinite;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 20px;
+    margin-right: 10px;
+}
+
+@keyframes blink {
+    0% { background-color: rgba(92, 219, 208, 0.93); }
+    25% { background-color: rgba(219, 202, 92, 0.93); }
+    50% { background-color: #dbca5c; }
+    75% { background-color: rgba(219, 202, 92, 0.65); }
+    100% { background-color: rgba(92, 219, 208, 0.93); }
+}
+
+.action-button {
+    background-color: #ff69b4; /* Розовый цвет */
+    color: #fff;
+    border: none;
+    padding: 8px 15px; /* Отступы */
+    border-radius: 5px; /* Закругление углов */
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    flex: 1; /* Кнопки будут занимать равное пространство */
+    margin-right: 5px; /* Отступ между кнопками */
+}
+
+.action-button:hover {
+    background-color: #ff1493; /* Темно-розовый цвет при наведении */
+    transform: scale(1.05); /* Увеличение при наведении */
+}
+
+.action-container {
+    display: flex;
+    justify-content: space-between; /* Разделить кнопки по краям */
+    margin-bottom: 5px; /* Отступ снизу для расстояния до кнопки Info */
+}
+
+.action-button:last-child {
+    margin-right: 0; /* Убираем отступ у последней кнопки */
+}
+
+
+.info-button {
+    display: block; /* Отображение в отдельной строке */
+    margin-top: 5px; /* Отступ сверху */
+}
+
+.bordered th:nth-last-child(1), .bordered td:nth-last-child(1) {
+    width: 135px; /* Задайте подходящую ширину */
+}
+
+.login-link, .logout-link {
+    display: inline-block; /* Отображаем в одну линию */
+    cursor: pointer;       /* Меняем курсор на указатель */
+    margin: 0 10px;       /* Отступы между иконками */
+}
+
+.login-link img, .logout-link img {
+    width: 40px;          /* Ширина изображения */
+    height: 40px;         /* Высота изображения */
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    margin-top: 20px; /* Отступ сверху */
+
+}
+
+.user-details {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.user-details span {
+    margin-right: 10px;
+}
+
+.admin-button {
+    background-color: #ff69b4; /* Розовый цвет кнопки */
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    position: fixed; /* Фиксированное позиционирование */
+    right: 20px; /* Отступ справа */
+    bottom: 20px; /* Отступ снизу */
+}
+
+.admin-button:hover {
+    background-color: #ff1493; /* Темно-розовый цвет при наведении */
+    transform: scale(1.05); /* Увеличение при наведении */
+}
+.notification-icon {
+    position: absolute;
+    top: 10px; /* Отступ сверху */
+    left: 10px; /* Отступ слева */
+}
+
+.large-button {
+    font-size: 18px;
+    padding: 15px 30px;
+    margin: 10px;
+    background-color: #aacbed;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.large-button:hover {
+    background-color: #679fde;
+}
+
+.filter-input {
+    display: block;
+    margin: 5px auto; /* Центрирование по горизонтали */
+    width: 80%; /* Ширина поля ввода */
+}
+.error-message {
+    position: absolute;
+    top: -20px;
+    left: 0;
+    color: red;
+    background-color: #ffe6e6;
+    border: 1px solid red;
+    padding: 5px;
+    z-index: 1000;
+}
+
+.success-message {
+    position: absolute;
+    top: -20px;
+    left: 0;
+    color: green; /* Зелёный цвет текста */
+    background-color: #e6ffe6; /* Светло-зелёный фон */
+    border: 1px solid green;
+    padding: 5px;
+    z-index: 1000;
+}
+
+.tooltip {
+    display: none;
+    position: absolute;
+    background-color: pink;
+    border: 1px solid #ccc;
+    padding: 10px;
+    z-index: 1000;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    top: 0;
+    left: 100%;
+    margin-left: 10px;
+    width: 150px;
+    border-radius: 5px;
+    font-family: 'Roboto', sans-serif;
+}
+
+.user-info {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.user-info img {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.user-info span {
+    font-weight: bold;
+}
+.blinking-button {
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0% { background-color: red; }
+    50% { background-color: yellow; }
+    100% { background-color: red; }
+}
+
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1000; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; /* Could be more or less, depending on screen size */
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.close-message {
+    float: right;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.city-visualization {
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.city-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+
+.city-item {
+    display: flex;
+    flex-direction: column; /* Размещает элементы вертикально */
+    align-items: center; /* Центрирует элементы */
+    margin: 10px; /* Добавляет отступы между элементами */
+}
+
+
+.city-canvas {
+    border: 1px solid #ccc;
+}
+.ring-visualization {
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+
+
+.ring-item {
+    display: flex;
+    flex-direction: column; /* Размещает элементы вертикально */
+    align-items: center; /* Центрирует элементы */
+    margin: 10px; /* Добавляет отступы между элементами */
+}
+
+
+.ring-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.ring-canvas {
+    border: 1px solid #ccc;
+}

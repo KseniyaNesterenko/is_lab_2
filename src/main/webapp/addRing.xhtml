@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:pt="http://xmlns.jcp.org/jsf/passthrough">
+<h:head>
+    <title>Add Ring</title>
+    <h:outputStylesheet name="css/add.css"/>
+    <script>
+        function showTooltip(id, message) {
+            var tooltip = document.getElementById(id);
+            tooltip.innerText = message;
+            tooltip.style.display = 'block';
+            setTimeout(function () {
+                tooltip.style.display = 'none';
+            }, 1500);
+        }
+    </script>
+</h:head>
+<h:body>
+
+    <h:messages id="messages" globalOnly="false" styleClass="error-message" />
+    <h:form>
+        <h:panelGrid columns="2" styleClass="input-table">
+            <h:outputLabel for="name" value="Name:" />
+            <h:panelGroup style="position: relative;">
+                <h:inputText id="name" value="#{ringBean.ring.name}" pt:placeholder="Введите имя, например Вова" />
+                <h:commandButton value="?" type="button" onclick="showTooltip('nameTooltip', 'Введите имя существа');" />
+                <div id="nameTooltip" class="tooltip"></div>
+            </h:panelGroup>
+
+            <h:outputLabel for="ringPower" value="Ring Power:" />
+            <h:panelGroup style="position: relative;">
+                <h:inputText id="ringPower" value="#{ringBean.ring.power}" pt:placeholder="Enter ring power" converter="ringPowerConverter">
+                    <f:ajax event="keyup" listener="#{ringBean.validateRingPower}" render="ringPowerMessage" />
+                </h:inputText>
+                <h:commandButton value="?" type="button" onclick="showTooltip('ringPowerTooltip', 'Введите силу кольца');" />
+                <h:message id="ringPowerMessage" for="ringPower" styleClass="error-message" />
+                <div id="ringPowerTooltip" class="tooltip"></div>
+            </h:panelGroup>
+        </h:panelGrid>
+
+        <h:commandButton value="Назад" action="ring?faces-redirect=true" styleClass="back-button" />
+        <h:commandButton value="Добавить объект" action="#{ringBean.addToDatabase}" styleClass="back-button" render="@form messages" />
+    </h:form>
+</h:body>
+</html>

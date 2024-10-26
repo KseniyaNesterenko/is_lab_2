@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:pt="http://xmlns.jcp.org/jsf/passthrough">
+<h:head>
+    <title>Edit Magic City</title>
+    <h:outputStylesheet name="css/add.css"/>
+    <script>
+        function showTooltip(id, message) {
+            var tooltip = document.getElementById(id);
+            tooltip.innerText = message;
+            tooltip.style.display = 'block';
+            setTimeout(function () {
+                tooltip.style.display = 'none';
+            }, 1500);
+        }
+    </script>
+</h:head>
+<h:body>
+    <h:messages id="messages" globalOnly="false" styleClass="error-message" />
+    <div class="container">
+        <h:form>
+            <h:panelGrid columns="2">
+                <h:outputLabel for="name" value="Name:" />
+                <h:panelGroup style="position: relative;">
+                    <h:inputText id="name" value="#{magicCityBean.magicCity.name}" pt:placeholder="Введите имя города" />
+                    <h:commandButton value="?" type="button" onclick="showTooltip('nameTooltip', 'Введите имя города');" />
+                    <div id="nameTooltip" class="tooltip"></div>
+                </h:panelGroup>
+
+                <h:outputLabel for="area" value="Area:" />
+                <h:panelGroup style="position: relative;">
+                    <h:inputText id="area" value="#{magicCityBean.magicCity.area}" pt:placeholder="Введите площадь города" converter="customDoubleConverter">
+                        <f:ajax event="keyup" listener="#{magicCityBean.validateCityArea}" render="areaMessage" />
+                    </h:inputText>
+                    <h:commandButton value="?" type="button" onclick="showTooltip('areaTooltip', 'Введите площадь города');" />
+                    <h:message id="areaMessage" for="area" styleClass="error-message" />
+                    <div id="areaTooltip" class="tooltip"></div>
+                </h:panelGroup>
+
+                <h:outputLabel for="population" value="Population:" />
+                <h:panelGroup style="position: relative;">
+                    <h:inputText id="population" value="#{magicCityBean.magicCity.population}" pt:placeholder="Введите население города" converter="customIntegerConverter">
+                        <f:attribute name="coordinateType" value="p" />
+                        <f:ajax event="keyup" listener="#{magicCityBean.validateCityPopulation}" render="populationMessage" />
+                    </h:inputText>
+                    <h:commandButton value="?" type="button" onclick="showTooltip('populationTooltip', 'Введите население города');" />
+                    <h:message id="populationMessage" for="population" styleClass="error-message" />
+                    <div id="populationTooltip" class="tooltip"></div>
+                </h:panelGroup>
+
+                <h:outputLabel for="populationDensity" value="Population Density:" />
+                <h:panelGroup style="position: relative;">
+                    <h:inputText id="populationDensity" value="#{magicCityBean.magicCity.populationDensity}" pt:placeholder="Введите плотность населения" converter="customPopulationConverter">
+                        <f:ajax event="keyup" listener="#{magicCityBean.validateCityPopulationDensity}" render="populationDensityMessage" />
+                    </h:inputText>
+                    <h:commandButton value="?" type="button" onclick="showTooltip('populationDensityTooltip', 'Введите плотность населения');" />
+                    <h:message id="populationDensityMessage" for="populationDensity" styleClass="error-message" />
+                    <div id="populationDensityTooltip" class="tooltip"></div>
+                </h:panelGroup>
+
+
+                <h:outputLabel for="governor" value="Governor:" />
+                <h:panelGroup style="position: relative;">
+                    <h:selectOneMenu id="governor" value="#{magicCityBean.magicCity.governor}">
+                        <f:selectItems value="#{bookCreatureBean.bookCreatureTypes}" />
+                    </h:selectOneMenu>
+                    <h:commandButton value="?" type="button" onclick="showTooltip('governorTooltip', 'Выберите губернатора');" />
+                    <div id="governorTooltip" class="tooltip"></div>
+                </h:panelGroup>
+
+                <h:outputLabel for="capital" value="Capital:" />
+                <h:panelGroup style="position: relative;">
+                    <h:selectBooleanCheckbox id="capital" value="#{magicCityBean.magicCity.capital}" />
+                    <h:commandButton value="?" type="button" onclick="showTooltip('capitalTooltip', 'Отметьте, является ли город столицей');" />
+                    <div id="capitalTooltip" class="tooltip"></div>
+                </h:panelGroup>
+            </h:panelGrid>
+
+            <h:commandButton value="Update" action="#{magicCityBean.update}" render="@form messages" styleClass="back-button"/>
+            <h:commandButton value="Назад" action="magicCity?faces-redirect=true" styleClass="back-button" />
+        </h:form>
+    </div>
+</h:body>
+</html>

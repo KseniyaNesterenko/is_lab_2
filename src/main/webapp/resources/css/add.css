@@ -1,0 +1,216 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: Arial, sans-serif;
+    background-color: #ffe6e6;
+    margin: 0;
+    padding: 0;
+}
+
+.input-table {
+    margin-top: 30px;
+    justify-content: center;
+    flex: 1;
+    border: 2px solid pink;
+    border-radius: 10px;
+    border-collapse: collapse;
+}
+
+.input-table th, .input-table td {
+    border: 1px solid pink;
+    padding: 8px;
+}
+
+
+.tables {
+    flex: 1;
+}
+
+.tables h\:panelGroup {
+    margin-bottom: 20px;
+}
+
+.container {
+    margin-top: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 20px;
+    width: 80%;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+h2 {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.h\:panelGrid {
+    margin-bottom: 20px;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.h\:panelGrid .h\:outputLabel {
+    font-weight: bold;
+    margin-right: 10px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    background-color: #ff69b4;
+    color: #fff;
+}
+
+.h\:panelGrid .h\:inputText,
+.h\:panelGrid .h\:selectOneMenu {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.h\:panelGrid .h\:message {
+    color: red;
+    margin-top: 5px;
+}
+
+.h\:commandButton {
+    background-color: #ff69b4;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 20px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.h\:commandButton:hover {
+    background-color: #ff1493;
+    transform: scale(1.05);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+table, th, td {
+    border: 1px solid #ddd;
+}
+
+th, td {
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #ff69b4;
+    color: #fff;
+}
+
+td {
+    background-color: #f9f9f9;
+}
+
+
+.back-button {
+    background-color: #ff69b4;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 20px;
+    margin-right: 10px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.back-button:hover {
+    background-color: #ff1493;
+    transform: scale(1.05);
+}
+
+.unique-form-and-tables-container {
+    margin-top: 30px;
+    display: flex;
+    gap: 20px;
+}
+
+
+.unique-form-container {
+    flex: 1;
+}
+
+
+.unique-tables-container {
+    flex: 1;
+    max-width: 300px;
+}
+.error-message {
+    position: absolute;
+    top: -20px;
+    left: 0;
+    color: red;
+    background-color: #ffe6e6;
+    border: 1px solid red;
+    padding: 5px;
+    z-index: 1000;
+}
+
+.tooltip {
+    display: none;
+    position: absolute;
+    background-color: pink;
+    border: 1px solid #ccc;
+    padding: 10px;
+    z-index: 1000;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    top: 0;
+    left: 100%;
+    margin-left: 10px;
+    width: 150px;
+    border-radius: 5px;
+    font-family: 'Roboto', sans-serif;
+}
+.main-title {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.sub-title {
+    margin-bottom: 20px;
+    font-size: 18px;
+    text-align: center;
+}
+
+.horizontal-container {
+    display: flex;
+    gap: 20px;
+}
+
+.unique-tables-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.pagination-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}

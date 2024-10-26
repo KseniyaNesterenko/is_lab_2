@@ -1,0 +1,56 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #f0f0f0;
+}
+.form-container {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+.form-container .panel-grid {
+    font-size: 1.2em;
+}
+.form-container .input-text,
+.form-container .input-secret {
+    background-color: #f09eae;
+    border: 2px solid rgb(223, 109, 131);
+    padding: 10px;
+    font-size: 1.2em;
+    border-radius: 5px;
+}
+.form-container .command-button {
+    background-color: pink;
+    border: 2px solid pink;
+    padding: 10px 20px;
+    font-size: 1.2em;
+    border-radius: 5px;
+    margin-top: 10px;
+    width: 200px;
+    height: 50px;
+}
+.form-container .command-button:hover {
+    background-color: #ff1493; /* Темно-розовый цвет при наведении */
+    transform: scale(1.05); /* Увеличение при наведении */
+}
+.button-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.error-message {
+    margin-top: 20px; /* Сдвигает сообщения вниз на 20 пикселей */
+    position: absolute;
+    top: -20px;
+    left: 0;
+    color: red;
+    background-color: #ffe6e6;
+    border: 1px solid red;
+    padding: 5px;
+    z-index: 1000;
+}

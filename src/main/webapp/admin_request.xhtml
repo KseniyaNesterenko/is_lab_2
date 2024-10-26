@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+<h:head>
+    <title>Admin Requests</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: 50px auto;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+    </style>
+</h:head>
+<h:body>
+    <div class="container">
+        <h:form>
+            <h:dataTable value="#{adminRequestBean.adminRequests}" var="arequest" styleClass="admin-requests-table">
+                <h:column>
+                    <f:facet name="header">ID</f:facet>
+                    #{arequest.id}
+                </h:column>
+                <h:column>
+                    <f:facet name="header">User</f:facet>
+                    #{arequest.user.username}
+                </h:column>
+                <h:column>
+                    <f:facet name="header">Status</f:facet>
+                    #{arequest.status}
+                </h:column>
+                <h:column>
+                    <f:facet name="header">Actions</f:facet>
+                    <h:commandButton value="Одобрить" action="#{adminRequestBean.approveRequest(arequest)}" />
+                    <h:commandButton value="Отклонить" action="#{adminRequestBean.rejectRequest(arequest)}" />
+                </h:column>
+            </h:dataTable>
+            <h:commandButton value="Назад" action="index?faces-redirect=true" />
+        </h:form>
+    </div>
+</h:body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+<h:head>
+    <title>Book Creature Information</title>
+    <h:outputStylesheet name="css/info.css"/>
+    <script src="js/numbers_format.js"></script>
+</h:head>
+<h:body>
+
+    <div class="container">
+        <h:form>
+            <h2>Magic City Information</h2>
+            <table>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Area</th>
+                    <th>Population</th>
+                    <th>Establishment Date</th>
+                    <th>Governor</th>
+                    <th>Capital</th>
+                    <th>Population Density</th>
+                </tr>
+                <tr>
+                    <td><h:outputText value="#{magicCityBean.magicCity.id}" /></td>
+                    <td><h:outputText value="#{magicCityBean.magicCity.name}" /></td>
+                    <td><h:outputText value="#{magicCityBean.magicCity.area}" /></td>
+                    <td><h:outputText value="#{magicCityBean.magicCity.population}" /></td>
+                    <td><h:outputText value="#{magicCityBean.magicCity.establishmentDate}" /></td>
+                    <td><h:outputText value="#{magicCityBean.magicCity.governor}" /></td>
+                    <td><h:outputText value="#{magicCityBean.magicCity.capital}" /></td>
+                    <td><h:outputText value="#{magicCityBean.magicCity.populationDensity}" /></td>
+                </tr>
+            </table>
+
+
+            <h2>Book Creature Information</h2>
+            <table>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Coordinates</th>
+                    <th>Creation Date</th>
+                    <th>Age</th>
+                    <th>Creature Type</th>
+                    <th>Creature Location</th>
+                    <th>Attack Level</th>
+                    <th>Defense Level</th>
+                    <th>Ring</th>
+                </tr>
+                <ui:repeat value="#{magicCityBean.bookCreatures}" var="bookCreature">
+                    <tr>
+                        <td><h:outputText value="#{bookCreature.id}" /></td>
+                        <td><h:outputText value="#{bookCreature.name}" /></td>
+                        <td><h:outputText value="#{bookCreature.coordinates.x}, #{bookCreature.coordinates.y}" /></td>
+                        <td><h:outputText value="#{bookCreature.creationDate}" /></td>
+                        <td><h:outputText value="#{bookCreature.age}" /></td>
+                        <td><h:outputText value="#{bookCreature.creatureType}" /></td>
+                        <td><h:outputText value="#{bookCreature.creatureLocation.id}" /></td>
+                        <td><h:outputText value="#{bookCreature.attackLevel}" /></td>
+                        <td><h:outputText value="#{bookCreature.defenseLevel}" /></td>
+                        <td><h:outputText value="#{bookCreature.ring.name}" /></td>
+                    </tr>
+                </ui:repeat>
+            </table>
+            <h:commandButton value="Назад" action="magicCity?faces-redirect=true" styleClass="back-button" />
+        </h:form>
+    </div>
+    <script>
+        function formatNumber(number) {
+            if (typeof number === 'number' &amp;&amp; !isNaN(number)) {
+                if (number > 1e15) {
+                    return number.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '') + '...';
+                } else {
+                    return number.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '');
+                }
+            }
+            return number;
+        }
+
+        function formatTableNumbers() {
+            var cells = document.querySelectorAll('.number-cell');
+            cells.forEach(function(cell) {
+                var value = cell.innerText.trim();
+                if (value) {
+                    var number = parseFloat(value);
+                    if (!isNaN(number)) {
+                        cell.innerText = formatNumber(number);
+                    }
+                }
+            });
+        }
+
+        window.onload = formatTableNumbers;
+    </script>
+</h:body>
+</html>

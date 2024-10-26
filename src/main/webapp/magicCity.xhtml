@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+<h:head>
+    <title>Magic City Management</title>
+    <h:outputStylesheet name="css/main.css"/>
+    <script>
+        function showMessage(message, isSuccess) {
+            var messageDiv = document.getElementById('message');
+            messageDiv.innerText = message;
+            messageDiv.className = isSuccess ? 'success-message' : 'error-message';
+            messageDiv.style.display = 'block';
+            setTimeout(function () {
+                messageDiv.style.display = 'none';
+            }, 1500);
+        }
+
+        function openModal() {
+            document.getElementById('notificationModal').style.display = 'block';
+            document.getElementById('adminRequestStatus').innerText = "#{userBean.adminRequestStatus}";
+        }
+
+        function closeModal() {
+            document.getElementById('notificationModal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            var modal = document.getElementById('notificationModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        function drawCity(canvasId, area, color) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            const maxWidth = canvas.width - 2;
+            const maxHeight = canvas.height - 2;
+
+            const minSquareSize = 20;
+            const minRectangleHeight = 20;
+            const minRectangleWidth = 40;
+
+            const heightMultiplier = 6;
+            const widthMultiplier = 6;
+            const squareMultiplier = 4;
+
+            const rectangleHeight = Math.max(Math.min(Math.sqrt(area) * heightMultiplier, maxHeight / 3), minRectangleHeight);
+            const rectangleWidth = Math.max(Math.min(Math.sqrt(area) * widthMultiplier, maxWidth), minRectangleWidth);
+
+            const squareSize = Math.max(Math.min(Math.sqrt(area) * squareMultiplier, maxHeight / 4), minSquareSize);
+
+            const offsetX = (canvas.width - rectangleWidth) / 2;
+            const verticalOffset = 30;
+            const rectangleY = (canvas.height - rectangleHeight - 20) + verticalOffset;
+            const squareY = rectangleY - squareSize;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = color;
+            ctx.fillRect(offsetX, rectangleY, rectangleWidth, rectangleHeight);
+
+            ctx.fillStyle = color;
+            ctx.fillRect(offsetX + (rectangleWidth - squareSize) / 2, squareY, squareSize, squareSize);
+        }
+
+        function showTooltip(event, city) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.style.display = 'block';
+            tooltip.innerHTML = `City: ${city.name}`;
+            tooltip.style.left = event.pageX + 10 + 'px';
+            tooltip.style.top = event.pageY + 10 + 'px';
+        }
+
+        function hideTooltip() {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.style.display = 'none';
+        }
+
+        function openCityModal(city) {
+            document.getElementById('cityModal').style.display = 'block';
+            document.getElementById('cityModalId').innerText = city.id;
+            document.getElementById('cityModalName').innerText = city.name;
+            document.getElementById('cityModalArea').innerText = city.area;
+        }
+
+        function closeCityModal() {
+            document.getElementById('cityModal').style.display = 'none';
+        }
+
+        function drawAllCities() {
+            const cityElements = document.querySelectorAll('.city-canvas');
+            cityElements.forEach(function(canvas) {
+                const area = canvas.getAttribute('data-area');
+                const userColor = canvas.getAttribute('data-user-color');
+                drawCity(canvas.id, area, userColor);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            drawAllCities();
+            const cityElements = document.querySelectorAll('.city-canvas');
+
+            cityElements.forEach(function(canvas) {
+                const cityId = canvas.getAttribute('data-id');
+                const cityName = canvas.getAttribute('data-name');
+                const cityArea = canvas.getAttribute('data-area');
+
+                canvas.addEventListener('mouseover', function(event) {
+                    showTooltip(event, { id: cityId, name: cityName, area: cityArea });
+                });
+
+                canvas.addEventListener('mouseout', hideTooltip);
+
+                canvas.addEventListener('click', function() {
+                    openCityModal({ id: cityId, name: cityName, area: cityArea });
+                });
+            });
+        });
+    </script>
+</h:head>
+<h:body>
+    <h:form>
+        <div class="user-info">
+            <div class="user-details">
+                <span>#{userBean.user.id}</span>
+                <h:graphicImage value="/resources/images/user.png" alt="Avatar" style="width: 60px; height: 60px;" />
+                <span>#{userBean.username}</span>
+                <h:commandLink action="#{userBean.loginPage}" rendered="#{!bookCreatureBean.isUserLoggedIn()}" styleClass="login-link">
+                    <h:graphicImage value="/resources/images/login.png" alt="Войти" />
+                </h:commandLink>
+                <h:commandLink action="#{userBean.logout}" rendered="#{bookCreatureBean.isUserLoggedIn()}" styleClass="logout-link">
+                    <h:graphicImage value="/resources/images/logout.png" alt="Выйти" />
+                </h:commandLink>
+            </div>
+
+            <h:commandButton value="Заявки на администраторов" action="admin_request?faces-redirect=true"
+                             rendered="#{userBean.isAdmin()}"
+                             styleClass="#{adminRequestBean.hasPendingRequests() ? 'blinking-button' : ''}"
+                             style="background-color: red;"/>
+
+            <h:commandButton value="Хочу стать админом" action="#{userBean.requestAdminRole}"
+                             rendered="#{bookCreatureBean.isUserLoggedIn() and !userBean.isAdmin()}"
+                             styleClass="admin-button" />
+        </div>
+
+        <h:commandLink onclick="openModal(); return false;" rendered="#{bookCreatureBean.isUserLoggedIn()}" styleClass="notification-icon">
+            <h:graphicImage value="/resources/images/notification.png" alt="Уведомления" style="width: 30px; height: 30px;" />
+        </h:commandLink>
+    </h:form>
+
+    <div id="message" style="display: none; margin-top: 30px;"></div>
+
+    <div id="notificationModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">×</span>
+            <p>Ваши уведомления:</p>
+            <p id="adminRequestStatus">#{userBean.adminRequestStatus}</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <h:form>
+            <h:messages id="messages" styleClass="error-message" />
+            <h2>Magic City Table</h2>
+            <h:dataTable id="magicCityTable" styleClass="bordered results" value="#{magicCityBean.paginatedResponse.data}" var="magicCity">
+                <h:column>
+                    <f:facet name="header">
+                        <h:commandLink value="ID" action="#{magicCityBean.sort('id')}" />
+                        <h:inputText value="#{magicCityBean.filterId}" styleClass="filter-input"/>
+                    </f:facet>
+                    <h:outputText value="#{magicCity.id}" styleClass="result-text" />
+                </h:column>
+                <h:column>
+                    <f:facet name="header">
+                        <h:commandLink value="Name" action="#{magicCityBean.sort('name')}" />
+                        <h:inputText value="#{magicCityBean.filterName}" styleClass="filter-input"/>
+                    </f:facet>
+                    <h:outputText value="#{magicCity.name}" styleClass="result-text"/>
+                </h:column>
+                <h:column>
+                    <f:facet name="header">
+                        <h:commandLink value="Area" action="#{magicCityBean.sort('area')}" />
+                        <h:inputText value="#{magicCityBean.filterArea}" styleClass="filter-input"/>
+                    </f:facet>
+                    <h:outputText value="#{magicCity.area}" styleClass="result-text" />
+                </h:column>
+                <h:column>
+                    <f:facet name="header">
+                        <h:commandLink value="Population" action="#{magicCityBean.sort('population')}" />
+                        <h:inputText value="#{magicCityBean.filterPopulation}" styleClass="filter-input"/>
+                    </f:facet>
+                    <h:outputText value="#{magicCity.population}" styleClass="result-text" />
+                </h:column>
+                <h:column>
+                    <f:facet name="header">Actions</f:facet>
+                    <div class="action-container">
+                        <h:commandButton value="✎" action="#{magicCityBean.edit(magicCity.id)}"
+                                         rendered="#{magicCity.user.id eq userBean.user.id or userBean.user.role eq 'ADMIN'}"
+                                         styleClass="action-button" />
+                        <h:commandButton value="✖" action="#{magicCityBean.delete(magicCity.id)}"
+                                         rendered="#{magicCity.user.id eq userBean.user.id or userBean.user.role eq 'ADMIN'}"
+                                         styleClass="action-button" />
+                    </div>
+                    <h:commandLink value="?" action="#{magicCityBean.getMagicCityInfoById(magicCity.id)}"
+                                   styleClass="action-button info-button" />
+                </h:column>
+            </h:dataTable>
+
+            <h:commandButton value="&#8592;" action="#{magicCityBean.previousPage}"
+                             disabled="#{magicCityBean.paginatedResponse.page == 1}">
+                <f:ajax execute="@form" render="@form" onevent="drawAllCities();" />
+            </h:commandButton>
+            <h:commandButton value="&#8594;" action="#{magicCityBean.nextPage}">
+                <f:ajax execute="@form" render="@form" onevent="drawAllCities();" />
+            </h:commandButton>
+            <h:commandButton value="Добавить объект" action="addCity?faces-redirect=true" styleClass="back-button" rendered="#{magicCityBean.isUserLoggedIn()}"/>
+        </h:form>
+
+        <h:form>
+            <div class="city-visualization">
+                <div class="city-container">
+                    <ui:repeat value="#{magicCityBean.paginatedResponse.data}" var="magicCity">
+                        <div class="city-item">
+                            <canvas id="cityCanvas-#{magicCity.id}" class="city-canvas" width="100" height="100"
+                                    data-area="#{magicCity.area}"
+                                    data-id="#{magicCity.id}"
+                                    data-name="#{magicCity.name}"
+                                    data-user-color="#{magicCity.user.color}"></canvas>
+                            <h:commandButton value="✎" action="#{magicCityBean.edit(magicCity.id)}"
+                                             rendered="#{magicCity.user.id eq userBean.user.id or userBean.user.role eq 'ADMIN'}"
+                                             styleClass="action-button" />
+                        </div>
+                    </ui:repeat>
+                </div>
+            </div>
+        </h:form>
+
+
+
+    </div>
+
+    <div id="cityModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeCityModal()">×</span>
+            <h2>City Details</h2>
+            <p><strong>ID:</strong> <span id="cityModalId"></span></p>
+            <p><strong>Name:</strong> <span id="cityModalName"></span></p>
+            <p><strong>Area:</strong> <span id="cityModalArea"></span></p>
+        </div>
+    </div>
+
+    <h:form>
+        <h:commandButton value="На главную" action="index?faces-redirect=true" styleClass="back-button" />
+<!--        <h:commandButton value="Все объекты MagicCity" action="usersCities?faces-redirect=true" styleClass="large-button"/>-->
+    </h:form>
+
+    <script>
+        window.drawAllCities = drawAllCities;
+    </script>
+</h:body>
+</html>

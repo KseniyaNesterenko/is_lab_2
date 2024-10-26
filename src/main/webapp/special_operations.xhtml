@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+<h:head>
+    <title>Book Creature Special Operations</title>
+    <h:outputStylesheet name="css/info.css"/>
+    <script>
+        function openModal() {
+            document.getElementById('notificationModal').style.display = 'block';
+            document.getElementById('adminRequestStatus').innerText = "#{userBean.adminRequestStatus}";
+        }
+
+        function closeModal() {
+            document.getElementById('notificationModal').style.display = 'none';
+        }
+    </script>
+</h:head>
+<h:body>
+    <h:form>
+        <div class="user-info">
+            <div class="user-details">
+                <span>#{userBean.user.id}</span>
+                <h:graphicImage value="/resources/images/user.png" alt="Avatar" style="width: 60px; height: 60px;" />
+                <span>#{userBean.username}</span>
+                <h:commandLink action="#{userBean.loginPage}" rendered="#{!bookCreatureBean.isUserLoggedIn()}" styleClass="login-link">
+                    <h:graphicImage value="/resources/images/login.png" alt="Войти" />
+                </h:commandLink>
+                <h:commandLink action="#{userBean.logout}" rendered="#{bookCreatureBean.isUserLoggedIn()}" styleClass="logout-link">
+                    <h:graphicImage value="/resources/images/logout.png" alt="Выйти" />
+                </h:commandLink>
+            </div>
+
+            <h:commandButton value="Заявки на администраторов"
+                             action="admin_request?faces-redirect=true"
+                             rendered="#{userBean.isAdmin()}"
+                             styleClass="#{adminRequestBean.hasPendingRequests() ? 'blinking-button' : ''}"
+                             style="background-color: red;"/>
+
+            <h:commandButton value="Хочу стать админом" action="#{userBean.requestAdminRole}" rendered="#{bookCreatureBean.isUserLoggedIn() and !userBean.isAdmin()}"
+                             styleClass="admin-button" />
+        </div>
+        <h:commandLink onclick="openModal(); return false;" rendered="#{bookCreatureBean.isUserLoggedIn()}" styleClass="notification-icon">
+            <h:graphicImage value="/resources/images/notification.png" alt="Уведомления" style="width: 30px; height: 30px;" />
+        </h:commandLink>
+    </h:form>
+
+    <div id="message" style="display: none; margin-top: 30px;">
+        <span class="close-message" onclick="closeMessage()">×</span>
+        <span id="messageText"></span>
+    </div>
+
+    <div id="notificationModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">×</span>
+            <p>Ваши уведомления:</p>
+            <p id="adminRequestStatus">#{userBean.adminRequestStatus}</p>
+        </div>
+    </div>
+    <h:form>
+        <div class="input-container">
+            <label for="attackLevelInput">Уровень атаки:</label>
+            <h:inputText id="attackLevelInput" value="#{bookCreatureBean.filterAttackLevel}" />
+        </div>
+
+        <div class="button-container">
+            <h:commandButton
+                    value="Удалить по attackLevel"
+                    action="#{bookCreatureBean.deleteByAttackLevel(bookCreatureBean.filterAttackLevel)}"
+                    styleClass="large-button" />
+            <h:commandButton
+                    value="Найти минимальные координаты"
+                    action="#{bookCreatureBean.getMinCoordinatesCreature()}"
+                    styleClass="large-button" />
+        </div>
+
+        <div class="button-container">
+            <h:commandButton value="Получить уникальные кольца" action="#{bookCreatureBean.getUniqueRingNames()}" styleClass="large-button" />
+            <h:commandButton value="Забрать кольца у хоббитов" action="#{bookCreatureBean.takeRingsFromHobbits()}" styleClass="large-button" />
+        </div>
+
+        <div class="button-container">
+            <h:commandButton value="Переместить хоббитов с кольцами в Мордор" action="#{bookCreatureBean.moveHobbitsWithRingsToMordor()}" styleClass="large-button" />
+            <h:commandButton value="Показать хоббитов с кольцами в Мордоре" action="hobbits_in_mordor" styleClass="large-button" />
+        </div>
+
+        <div class="results-container">
+            <h3>Результаты выполнения:</h3>
+            <p>Результат удаления по attackLevel: #{bookCreatureBean.deleteResult}</p>
+            <p>Минимальные координаты: #{bookCreatureBean.minCoordinatesResult}</p>
+            <p>Уникальные кольца: #{bookCreatureBean.uniqueRingsResult}</p>
+            <p>Результат забора колец у хоббитов: #{bookCreatureBean.takeRingsResult}</p>
+            <p>Результат перемещения хоббитов в Мордор: #{bookCreatureBean.moveHobbitsResult}</p>
+        </div>
+
+        <div class="centered">
+            <h:dataTable value="#{bookCreatureBean.deletedCreatures}" var="creature" rendered="#{not empty bookCreatureBean.deletedCreatures}">
+                <h:column>
+                    <f:facet name="header">Name</f:facet>
+                    #{creature.name}
+                </h:column>
+                <h:column>
+                    <f:facet name="header">Attack Level</f:facet>
+                    #{creature.attackLevel}
+                </h:column>
+            </h:dataTable>
+            <h:commandButton value="Назад" action="index?faces-redirect=true" styleClass="back-button" />
+        </div>
+    </h:form>
+</h:body>
+</html>

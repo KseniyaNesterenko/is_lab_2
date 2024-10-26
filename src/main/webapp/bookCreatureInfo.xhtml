@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+<h:head>
+    <title>Book Creature Information</title>
+    <h:outputStylesheet name="css/info.css"/>
+    <script src="js/numbers_format.js"></script>
+    <script>
+        function openModal() {
+            document.getElementById('notificationModal').style.display = 'block';
+            document.getElementById('adminRequestStatus').innerText = "#{userBean.adminRequestStatus}";
+        }
+
+        function closeModal() {
+            document.getElementById('notificationModal').style.display = 'none';
+        }
+    </script>
+</h:head>
+<h:body>
+    <h:form>
+        <div class="user-info">
+            <div class="user-details">
+                <span>#{userBean.user.id}</span>
+                <h:graphicImage value="/resources/images/user.png" alt="Avatar" style="width: 60px; height: 60px;" />
+                <span>#{userBean.username}</span>
+                <h:commandLink action="#{userBean.loginPage}" rendered="#{!bookCreatureBean.isUserLoggedIn()}" styleClass="login-link">
+                    <h:graphicImage value="/resources/images/login.png" alt="Войти" />
+                </h:commandLink>
+                <h:commandLink action="#{userBean.logout}" rendered="#{bookCreatureBean.isUserLoggedIn()}" styleClass="logout-link">
+                    <h:graphicImage value="/resources/images/logout.png" alt="Выйти" />
+                </h:commandLink>
+            </div>
+
+            <h:commandButton value="Заявки на администраторов"
+                             action="admin_request?faces-redirect=true"
+                             rendered="#{userBean.isAdmin()}"
+                             styleClass="#{adminRequestBean.hasPendingRequests() ? 'blinking-button' : ''}"
+                             style="background-color: red;"/>
+
+            <h:commandButton value="Хочу стать админом" action="#{userBean.requestAdminRole}" rendered="#{bookCreatureBean.isUserLoggedIn() and !userBean.isAdmin()}"
+                             styleClass="admin-button" />
+        </div>
+        <h:commandLink onclick="openModal(); return false;" rendered="#{bookCreatureBean.isUserLoggedIn()}" styleClass="notification-icon">
+            <h:graphicImage value="/resources/images/notification.png" alt="Уведомления" style="width: 30px; height: 30px;" />
+        </h:commandLink>
+    </h:form>
+
+    <div id="message" style="display: none; margin-top: 30px;">
+        <span class="close-message" onclick="closeMessage()">×</span>
+        <span id="messageText"></span>
+    </div>
+
+    <div id="notificationModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">×</span>
+            <p>Ваши уведомления:</p>
+            <p id="adminRequestStatus">#{userBean.adminRequestStatus}</p>
+        </div>
+    </div>
+    <div class="container">
+        <h:form>
+            <h2>Book Creature Information</h2>
+            <table>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Coordinates</th>
+                    <th>Creation Date</th>
+                    <th>Age</th>
+                    <th>Creature Type</th>
+                    <th>Creature Location</th>
+                    <th>Attack Level</th>
+                    <th>Defense Level</th>
+                    <th>Ring</th>
+                </tr>
+                <tr>
+                    <td><h:outputText value="#{bookCreatureBean.bookCreature.id}" /></td>
+                    <td><h:outputText value="#{bookCreatureBean.bookCreature.name}" /></td>
+                    <td><h:outputText value="#{bookCreatureBean.bookCreature.coordinates.x}, #{bookCreatureBean.bookCreature.coordinates.y}" /></td>
+                    <td><h:outputText value="#{bookCreatureBean.bookCreature.creationDate}" /></td>
+                    <td><h:outputText value="#{bookCreatureBean.bookCreature.age}" /></td>
+                    <td><h:outputText value="#{bookCreatureBean.bookCreature.creatureType}" /></td>
+                    <td><h:outputText value="#{bookCreatureBean.bookCreature.creatureLocation.name}" /></td>
+                    <td><h:outputText value="#{bookCreatureBean.bookCreature.attackLevel}" /></td>
+                    <td><h:outputText value="#{bookCreatureBean.bookCreature.defenseLevel}" /></td>
+                    <td><h:outputText value="#{bookCreatureBean.bookCreature.ring.name}" /></td>
+                </tr>
+            </table>
+
+            <h2>Ring Information</h2>
+            <table>
+                <tr>
+                    <th>Name</th>
+                    <th>Power</th>
+                </tr>
+                <tr>
+                    <td><h:outputText value="#{bookCreatureBean.bookCreature.ring.name}" /></td>
+                    <td><h:outputText value="#{bookCreatureBean.bookCreature.ring.power}" /></td>
+                </tr>
+            </table>
+
+            <h2>Magic City Information</h2>
+            <table>
+                <tr>
+                    <th>Name</th>
+                    <th>Area</th>
+                    <th>Population</th>
+                    <th>Establishment Date</th>
+                    <th>Governor</th>
+                    <th>Capital</th>
+                    <th>Population Density</th>
+                </tr>
+                <tr>
+                    <td><h:outputText value="#{bookCreatureBean.bookCreature.creatureLocation.name}" /></td>
+                    <td><h:outputText value="#{bookCreatureBean.bookCreature.creatureLocation.area}" styleClass="number-cell"/></td>
+                    <td><h:outputText value="#{bookCreatureBean.bookCreature.creatureLocation.population}" /></td>
+                    <td><h:outputText value="#{bookCreatureBean.bookCreature.creatureLocation.establishmentDate}" /></td>
+                    <td><h:outputText value="#{bookCreatureBean.bookCreature.creatureLocation.governor}" /></td>
+                    <td><h:outputText value="#{bookCreatureBean.bookCreature.creatureLocation.capital}" /></td>
+                    <td><h:outputText value="#{bookCreatureBean.bookCreature.creatureLocation.populationDensity}" /></td>
+                </tr>
+            </table>
+
+            <h:commandButton value="Назад" action="index?faces-redirect=true" styleClass="back-button" />
+        </h:form>
+    </div>
+    <script>
+        function formatNumber(number) {
+            if (typeof number === 'number' &amp;&amp; !isNaN(number)) {
+                if (number > 1e15) {
+                    return number.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '') + '...';
+                } else {
+                    return number.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '');
+                }
+            }
+            return number;
+        }
+
+        function formatTableNumbers() {
+            var cells = document.querySelectorAll('.number-cell');
+            cells.forEach(function(cell) {
+                var value = cell.innerText.trim();
+                if (value) {
+                    var number = parseFloat(value);
+                    if (!isNaN(number)) {
+                        cell.innerText = formatNumber(number);
+                    }
+                }
+            });
+        }
+
+        window.onload = formatTableNumbers;
+    </script>
+</h:body>
+</html>

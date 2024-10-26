@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:pt="http://xmlns.jcp.org/jsf/passthrough">
+<h:head>
+    <title>Краткая форма</title>
+    <h:outputStylesheet name="css/add.css"/>
+    <script>
+        function showTooltip(id, message) {
+            var tooltip = document.getElementById(id);
+            tooltip.innerText = message;
+            tooltip.style.display = 'block';
+            setTimeout(function () {
+                tooltip.style.display = 'none';
+            }, 1500);
+        }
+    </script>
+</h:head>
+<h:body>
+
+    <h:messages id="messages" globalOnly="false" styleClass="error-message" />
+    <div class="unique-form-and-tables-container">
+        <h:form>
+            <div class="horizontal-container">
+                <div class="unique-form-container">
+                    <h:panelGrid columns="2" styleClass="input-table">
+                        <h:outputLabel for="name" value="Name:" />
+                        <h:panelGroup style="position: relative;">
+                            <h:inputText id="name" value="#{bookCreatureBean.bookCreature.name}" pt:placeholder="Введите имя, например Вова" />
+                            <h:commandButton value="?" type="button" onclick="showTooltip('nameTooltip', 'Введите имя существа');" />
+                            <div id="nameTooltip" class="tooltip"></div>
+                        </h:panelGroup>
+
+                        <h:outputLabel for="x" value="Coordinates X:" />
+                        <h:panelGroup style="position: relative;">
+                            <h:inputText id="x" value="#{bookCreatureBean.bookCreature.coordinates.x}" pt:placeholder="Введите координату x (максимальное значение 488)" converter="customIntegerConverter">
+                                <f:attribute name="coordinateType" value="x" />
+                                <f:ajax event="keyup" listener="#{bookCreatureBean.validateX}" render="xMessage" />
+                            </h:inputText>
+                            <h:commandButton value="?" type="button" onclick="showTooltip('xTooltip', 'Введите координату X');" />
+                            <h:message id="xMessage" for="x" styleClass="error-message" />
+                            <div id="xTooltip" class="tooltip"></div>
+                        </h:panelGroup>
+
+                        <h:outputLabel for="y" value="Coordinates Y:" />
+                        <h:panelGroup style="position: relative;">
+                            <h:inputText id="y" value="#{bookCreatureBean.bookCreature.coordinates.y}" pt:placeholder="Введите координату y" converter="customIntegerConverter">
+                                <f:attribute name="coordinateType" value="y" />
+                                <f:ajax event="keyup" listener="#{bookCreatureBean.validateY}" render="yMessage" />
+                            </h:inputText>
+                            <h:commandButton value="?" type="button" onclick="showTooltip('yTooltip', 'Введите координату Y');" />
+                            <h:message id="yMessage" for="y" styleClass="error-message" />
+                            <div id="yTooltip" class="tooltip"></div>
+                        </h:panelGroup>
+
+                        <h:outputLabel for="age" value="Age:" />
+                        <h:panelGroup style="position: relative;">
+                            <h:inputText id="age" value="#{bookCreatureBean.bookCreature.age}" pt:placeholder="Enter age" converter="customLongConverter">
+                                <f:ajax event="keyup" listener="#{bookCreatureBean.validateAge}" render="ageMessage" />
+                            </h:inputText>
+                            <h:commandButton value="?" type="button" onclick="showTooltip('ageTooltip', 'Введите возраст существа');" />
+                            <h:message id="ageMessage" for="age" styleClass="error-message" />
+                            <div id="ageTooltip" class="tooltip"></div>
+                        </h:panelGroup>
+
+                        <h:outputLabel for="creatureType" value="Creature Type:" />
+                        <h:panelGroup style="position: relative;">
+                            <h:selectOneMenu id="creatureType" value="#{bookCreatureBean.bookCreature.creatureType}">
+                                <f:selectItems value="#{bookCreatureBean.bookCreatureTypes}" />
+                            </h:selectOneMenu>
+                            <h:commandButton value="?" type="button" onclick="showTooltip('typeTooltip', 'Выберите тип существа')" />
+                            <div id="typeTooltip" class="tooltip"></div>
+                        </h:panelGroup>
+
+                        <h:outputLabel for="attackLevel" value="Attack Level:" />
+                        <h:panelGroup style="position: relative;">
+                            <h:inputText id="attackLevel" value="#{bookCreatureBean.bookCreature.attackLevel}" pt:placeholder="Enter attack level" converter="customFloatConverter">
+                                <f:attribute name="coordinateType" value="attack" />
+                                <f:ajax event="keyup" listener="#{bookCreatureBean.validateAttackLevel}" render="attackLevelMessage" />
+                            </h:inputText>
+                            <h:commandButton value="?" type="button" onclick="showTooltip('attackTooltip', 'Введите уровень атаки');" />
+                            <h:message id="attackLevelMessage" for="attackLevel" styleClass="error-message" />
+                            <div id="attackTooltip" class="tooltip"></div>
+                        </h:panelGroup>
+
+                        <h:outputLabel for="defenseLevel" value="Defense Level:" />
+                        <h:panelGroup style="position: relative;">
+                            <h:inputText id="defenseLevel" value="#{bookCreatureBean.bookCreature.defenseLevel}" pt:placeholder="Enter defense level" converter="customFloatConverter">
+                                <f:attribute name="coordinateType" value="defense" />
+                                <f:ajax event="keyup" listener="#{bookCreatureBean.validateDefenseLevel}" render="defenseLevelMessage" />
+                            </h:inputText>
+                            <h:commandButton value="?" type="button" onclick="showTooltip('defenseTooltip', 'Введите уровень защиты');" />
+                            <h:message id="defenseLevelMessage" for="defenseLevel" styleClass="error-message" />
+                            <div id="defenseTooltip" class="tooltip"></div>
+                        </h:panelGroup>
+
+                        <h:outputLabel for="magicCityId" value="Magic City ID:" />
+                        <h:panelGroup style="position: relative;">
+                            <h:inputText id="magicCityId" value="#{bookCreatureBean.magicCityId}" pt:placeholder="Enter Magic City ID" converter="customIntegerConverter">
+                                <f:attribute name="coordinateType" value="cityID" />
+                                <f:ajax event="keyup" listener="#{bookCreatureBean.validateMagicCityAndRingId}" render="magicCityIdMessage" />
+                            </h:inputText>
+                            <h:commandButton value="?" type="button" onclick="showTooltip('magicCityIdTooltip', 'Введите ID города');" />
+                            <h:message id="magicCityIdMessage" for="magicCityId" styleClass="error-message" />
+                            <div id="magicCityIdTooltip" class="tooltip"></div>
+                        </h:panelGroup>
+
+                        <h:outputLabel for="ringId" value="Ring ID:" />
+                        <h:panelGroup style="position: relative;">
+                            <h:inputText id="ringId" value="#{bookCreatureBean.ringId}" pt:placeholder="Enter Ring ID" converter="customIntegerConverter">
+                                <f:attribute name="coordinateType" value="ringID" />
+                                <f:ajax event="keyup" listener="#{bookCreatureBean.validateMagicCityAndRingId}" render="ringIdMessage" />
+                            </h:inputText>
+                            <h:commandButton value="?" type="button" onclick="showTooltip('ringIdTooltip', 'Введите ID кольца');" />
+                            <h:message id="ringIdMessage" for="ringId" styleClass="error-message" />
+                            <div id="ringIdTooltip" class="tooltip"></div>
+                        </h:panelGroup>
+                    </h:panelGrid>
+                    <h:commandButton value="Добавить объект" action="#{bookCreatureBean.addToDatabaseShort}" styleClass="back-button" render="@form messages" />
+                    <h:commandButton value="Назад" action="addBookCreature?faces-redirect=true" styleClass="back-button" />
+                </div>
+
+                <div class="unique-tables-container">
+                    <h:panelGroup>
+                        <h:outputLabel value="Магические города" />
+                        <h:dataTable value="#{bookCreatureBean.magicCities}" var="city">
+                            <h:column>
+                                <f:facet name="header">ID</f:facet>
+                                #{city.id}
+                            </h:column>
+                            <h:column>
+                                <f:facet name="header">Name</f:facet>
+                                #{city.name}
+                            </h:column>
+                        </h:dataTable>
+                        <div class="pagination-buttons">
+                            <h:commandButton value="&#8592;" action="#{bookCreatureBean.previousMagicCityPage}">
+                                <f:ajax execute="@form" render="@form" />
+                            </h:commandButton>
+                            <h:commandButton value="&#8594;" action="#{bookCreatureBean.nextMagicCityPage}">
+                                <f:ajax execute="@form" render="@form" />
+                            </h:commandButton>
+                        </div>
+                    </h:panelGroup>
+
+                    <h:panelGroup>
+                        <h:outputLabel value="Кольца" />
+                        <h:dataTable value="#{bookCreatureBean.rings}" var="ring">
+                            <h:column>
+                                <f:facet name="header">ID</f:facet>
+                                #{ring.id}
+                            </h:column>
+                            <h:column>
+                                <f:facet name="header">Name</f:facet>
+                                #{ring.name}
+                            </h:column>
+                        </h:dataTable>
+                        <div class="pagination-buttons">
+                            <h:commandButton value="&#8592;" action="#{bookCreatureBean.previousRingPage}" disabled="#{bookCreatureBean.ringPage == 0}" />
+                            <h:commandButton value="&#8594;" action="#{bookCreatureBean.nextRingPage}" disabled="#{bookCreatureBean.ringPage == bookCreatureBean.ringTotalPages - 1}" />
+                        </div>
+                    </h:panelGroup>
+                </div>
+
+            </div>
+        </h:form>
+    </div>
+</h:body>
+</html>

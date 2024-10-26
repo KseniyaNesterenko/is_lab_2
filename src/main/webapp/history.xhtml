@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+<h:head>
+    <title>Book Creature History</title>
+    <style>
+        .centered-title {
+            text-align: center; /* Центрируем текст */
+            margin-top: 20px; /* Добавляем верхний отступ для красоты */
+            font-size: 24px; /* Размер шрифта */
+        }
+    </style>
+    <h:outputStylesheet name="css/main.css"/>
+    <script>
+        function openModal() {
+            document.getElementById('notificationModal').style.display = 'block';
+            document.getElementById('adminRequestStatus').innerText = "#{userBean.adminRequestStatus}";
+        }
+
+        function closeModal() {
+            document.getElementById('notificationModal').style.display = 'none';
+        }
+    </script>
+</h:head>
+<h:body>
+    <h:form>
+        <div class="user-info">
+            <div class="user-details">
+                <span>#{userBean.user.id}</span>
+                <h:graphicImage value="/resources/images/user.png" alt="Avatar" style="width: 60px; height: 60px;" />
+                <span>#{userBean.username}</span>
+                <h:commandLink action="#{userBean.loginPage}" rendered="#{!bookCreatureBean.isUserLoggedIn()}" styleClass="login-link">
+                    <h:graphicImage value="/resources/images/login.png" alt="Войти" />
+                </h:commandLink>
+                <h:commandLink action="#{userBean.logout}" rendered="#{bookCreatureBean.isUserLoggedIn()}" styleClass="logout-link">
+                    <h:graphicImage value="/resources/images/logout.png" alt="Выйти" />
+                </h:commandLink>
+            </div>
+
+            <h:commandButton value="Заявки на администраторов"
+                             action="admin_request?faces-redirect=true"
+                             rendered="#{userBean.isAdmin()}"
+                             styleClass="#{adminRequestBean.hasPendingRequests() ? 'blinking-button' : ''}"
+                             style="background-color: red;"/>
+
+            <h:commandButton value="Хочу стать админом" action="#{userBean.requestAdminRole}" rendered="#{bookCreatureBean.isUserLoggedIn() and !userBean.isAdmin()}"
+                             styleClass="admin-button" />
+        </div>
+        <h:commandLink onclick="openModal(); return false;" rendered="#{bookCreatureBean.isUserLoggedIn()}" styleClass="notification-icon">
+            <h:graphicImage value="/resources/images/notification.png" alt="Уведомления" style="width: 30px; height: 30px;" />
+        </h:commandLink>
+    </h:form>
+
+    <div id="message" style="display: none; margin-top: 30px;">
+        <span class="close-message" onclick="closeMessage()">×</span>
+        <span id="messageText"></span>
+    </div>
+
+    <div id="notificationModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">×</span>
+            <p>Ваши уведомления:</p>
+            <p id="adminRequestStatus">#{userBean.adminRequestStatus}</p>
+        </div>
+    </div>
+    <h1 class="centered-title">Book Creature History</h1>
+    <div class="container">
+        <h:dataTable value="#{historyBean.historyList}" var="history">
+            <h:column>
+                <f:facet name="header">User ID</f:facet>
+                #{history.userId}
+            </h:column>
+            <h:column>
+                <f:facet name="header">Creature Type</f:facet>
+                #{history.objectType}
+            </h:column>
+            <h:column>
+                <f:facet name="header">Creature ID</f:facet>
+                #{history.bookCreatureId}
+            </h:column>
+            <h:column>
+                <f:facet name="header">Change Date</f:facet>
+                #{history.changeDate}
+            </h:column>
+            <h:column>
+                <f:facet name="header">Change Type</f:facet>
+                #{history.changeType}
+            </h:column>
+        </h:dataTable>
+        <h:form>
+            <div>
+                <h:commandButton value="&#8592;" action="#{historyBean.previousPage}" disabled="#{historyBean.page == 1}" />
+                <h:commandButton value="&#8594;" action="#{historyBean.nextPage}" disabled="#{historyBean.page == historyBean.totalPages}" />
+            </div>
+        </h:form>
+    </div>
+    <h:form>
+        <div>
+            <h:commandButton value="Назад" action="index?faces-redirect=true" styleClass="back-button"/>
+        </div>
+    </h:form>
+</h:body>
+</html>

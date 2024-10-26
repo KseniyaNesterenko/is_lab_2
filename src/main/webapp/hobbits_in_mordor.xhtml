@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+<h:head>
+    <title>Hobbits with Rings in Mordor</title>
+    <h:outputStylesheet name="css/info.css"/>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .centered-table-container {
+            width: 90%; /* Увеличиваем ширину таблицы */
+            border-collapse: collapse;
+        }
+
+        .centered-table-container th, .centered-table-container td {
+            padding: 20px; /* Увеличиваем отступы */
+            text-align: center;
+            font-size: 18px; /* Увеличиваем размер шрифта */
+        }
+    </style>
+</h:head>
+<h:body>
+    <h:form>
+        <div class="centered-table-container">
+            <h:dataTable value="#{bookCreatureBean.hobbitsWithRingsInMordor}" var="hobbit">
+                <h:column>
+                    <f:facet name="header">Name</f:facet>
+                    #{hobbit.name}
+                </h:column>
+                <h:column>
+                    <f:facet name="header">Ring</f:facet>
+                    #{hobbit.ring.name}
+                </h:column>
+                <h:column>
+                    <f:facet name="header">Location</f:facet>
+                    #{hobbit.creatureLocation.name}
+                </h:column>
+            </h:dataTable>
+        </div>
+        <h:commandButton value="Назад" action="special_operations?faces-redirect=true" styleClass="back-button" />
+    </h:form>
+</h:body>
+</html>
