@@ -64,6 +64,10 @@ public class BookCreatureBean implements Serializable {
         addDefaultBookCreaturesIfNotExist();
     }
 
+    public void updateBookCreatures() {
+        loadPaginatedBookCreatures();
+    }
+
     private void addDefaultBookCreaturesIfNotExist() {
         User currentUser = new User();
         currentUser.setId(1);
