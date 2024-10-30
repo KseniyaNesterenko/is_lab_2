@@ -11,33 +11,19 @@
     <script src="js/numbers_format.js"></script>
     <script src="js/notifications.js"></script>
     <script>
+        function showCreatureDetails(creatureId, creatureName, creatureType) {
+            document.getElementById('creatureModalId').textContent = creatureId;
+            document.getElementById('creatureModalName').textContent = creatureName;
+            document.getElementById('creatureModalType').textContent = creatureType;
+            document.getElementById('creatureModal').style.display = 'block';
+        }
+
         function updateTable() {
             document.getElementById('updateForm:updateButton').click();
         }
 
-        function showCanvasInfo(event) {
-            const tooltip = document.getElementById('tooltip');
-            tooltip.innerHTML = ''; // Очищаем предыдущую информацию
-            const creatureElements = document.querySelectorAll('.book-creature-canvas');
-
-            // Собираем информацию о всех существах
-            creatureElements.forEach(function(canvas) {
-                const creatureId = canvas.getAttribute('data-id');
-                const creatureName = canvas.getAttribute('data-name');
-                const creatureType = canvas.getAttribute('data-creature-type');
-
-                tooltip.innerHTML += `&lt;strong>ID:&lt;/strong> ${creatureId}&lt;br>`;
-                tooltip.innerHTML += `&lt;strong>Name:&lt;/strong> ${creatureName}&lt;br>`;
-                tooltip.innerHTML += `&lt;strong>Type:&lt;/strong> ${creatureType}&lt;br>&lt;br>`;
-            });
-
-            // Устанавливаем позицию и отображаем подсказку
-            tooltip.style.display = 'block';
-            tooltip.style.left = event.pageX + 10 + 'px';
-            tooltip.style.top = event.pageY + 10 + 'px';
-        }
-
         setInterval(updateTable, 1000);
+
         function openModal() {
             document.getElementById('notificationModal').style.display = 'block';
             document.getElementById('adminRequestStatus').innerText = "#{userBean.adminRequestStatus}";
@@ -49,7 +35,7 @@
 
         function getMaxCoordinates() {
             let maxX = 100;
-            let maxY = 100;
+            let maxY = 200;
 
             const creatureElements = document.querySelectorAll('.book-creature-canvas');
             creatureElements.forEach(function(canvas) {
@@ -62,10 +48,15 @@
 
             return { maxX, maxY };
         }
+
         function adjustCanvasSize(canvas, maxX, maxY, paddingFactor) {
             canvas.width = (maxX + 20) * paddingFactor;
             canvas.height = (maxY + 20) * paddingFactor;
         }
+        function closeCreatureModal() {
+            document.getElementById('creatureModal').style.display = 'none';
+        }
+
 
         function drawGrid(ctx, canvasWidth, canvasHeight, maxX, maxY, axisOffset) {
             const gridSize = 10;
@@ -124,15 +115,12 @@
             const canvas = document.getElementById('commonCanvas');
             const ctx = canvas.getContext('2d');
             const { maxX, maxY } = getMaxCoordinates();
-
-            const axisPadding = 500;
+            const axisPadding = maxY > 500 ? maxY/3 : 100;
             const adjustedMaxX = maxX + axisPadding;
             const adjustedMaxY = maxY + axisPadding;
-
             const axisOffset = 20;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
             drawGrid(ctx, canvas.width, canvas.height, adjustedMaxX, adjustedMaxY, axisOffset);
 
             const creatureElements = document.querySelectorAll('.book-creature-canvas');
@@ -141,18 +129,18 @@
                 const y = parseInt(canvas.getAttribute('data-y'));
                 const creatureType = canvas.getAttribute('data-creature-type');
                 const userColor = canvas.getAttribute('data-user-color');
+                const creatureId = canvas.getAttribute('data-id');
+                const creatureName = canvas.getAttribute('data-name');
 
-                drawBookCreature(ctx, x, y, creatureType, userColor, adjustedMaxX, adjustedMaxY, axisOffset);
+                drawBookCreature(ctx, x, y, creatureType, userColor, adjustedMaxX, adjustedMaxY, axisOffset, creatureId, creatureName);
             });
         }
 
-        function drawBookCreature(ctx, x, y, creatureType, color, maxX, maxY, axisOffset) {
-            const radius = 10;
 
+        function drawBookCreature(ctx, x, y, creatureType, color, maxX, maxY, axisOffset, creatureId, creatureName) {
+            const radius = 10;
             const canvasX = (x / maxX) * (ctx.canvas.width - axisOffset) + axisOffset;
             const canvasY = ctx.canvas.height - ((y / maxY) * (ctx.canvas.height - axisOffset)) - axisOffset;
-
-
 
             ctx.fillStyle = color;
             ctx.beginPath();
@@ -162,61 +150,38 @@
             ctx.fillStyle = 'black';
             ctx.font = '12px Arial';
             ctx.fillText(creatureType, canvasX + radius + 5, canvasY + 5);
+
+            // Add click event listener
+            ctx.canvas.addEventListener('click', function(event) {
+                const rect = ctx.canvas.getBoundingClientRect();
+                const mouseX = event.clientX - rect.left;
+                const mouseY = event.clientY - rect.top;
+
+                // Check if the click is within the creature's circle
+                const distance = Math.sqrt((mouseX - canvasX) ** 2 + (mouseY - canvasY) ** 2);
+                if (distance &lt;= radius) {
+                    showCreatureDetails(creatureId, creatureName, creatureType);
+                }
+            });
         }
+
 
         document.addEventListener('DOMContentLoaded', function() {
             drawAllBookCreatures();
-            const creatureElements = document.querySelectorAll('.book-creature-canvas');
-
-            creatureElements.forEach(function(canvas) {
-                const creatureId = canvas.getAttribute('data-id');
-                const creatureName = canvas.getAttribute('data-name');
-                const creatureType = canvas.getAttribute('data-creature-type');
-
-                canvas.addEventListener('mouseover', function(event) {
-                    showTooltip(event, { id: creatureId, name: creatureName, type: creatureType });
-                });
-
-                canvas.addEventListener('mouseout', hideTooltip);
-
-                canvas.addEventListener('click', function() {
-                    openCreatureModal({ id: creatureId, name: creatureName, type: creatureType });
-                });
-            });
-            document.getElementById('commonCanvas').addEventListener('click', showCanvasInfo);
+            const visualizationDiv = document.getElementById('creatureVisualization');
+            const isVisualizationVisible = localStorage.getItem('isVisualizationVisible') === 'true';
+            visualizationDiv.style.display = isVisualizationVisible ? 'block' : 'none';
+            drawAllBookCreatures();  // Инициализация отрисовки
         });
-
-        function showTooltip(event, creature) {
-            const tooltip = document.getElementById('tooltip');
-            tooltip.style.display = 'block';
-            tooltip.style.left = event.pageX + 10 + 'px';
-            tooltip.style.top = event.pageY + 10 + 'px';
-        }
-
-        function hideTooltip() {
-            const tooltip = document.getElementById('tooltip');
-            tooltip.style.display = 'none';
-        }
-
-        function openCreatureModal(creature) {
-            document.getElementById('creatureModal').style.display = 'block';
-            document.getElementById('creatureModalId').innerText = creature.id;
-            document.getElementById('creatureModalName').innerText = creature.name;
-            document.getElementById('creatureModalType').innerText = creature.type;
-        }
-
-        function closeCreatureModal() {
-            document.getElementById('creatureModal').style.display = 'none';
-        }
 
         function toggleVisualization() {
             const visualizationDiv = document.getElementById('creatureVisualization');
-            if (visualizationDiv.style.display === 'none' || visualizationDiv.style.display === '') {
-                visualizationDiv.style.display = 'block';
-            } else {
-                visualizationDiv.style.display = 'none';
-            }
+            const isCurrentlyVisible = visualizationDiv.style.display === 'block';
+
+            visualizationDiv.style.display = isCurrentlyVisible ? 'none' : 'block';
+            localStorage.setItem('isVisualizationVisible', !isCurrentlyVisible);
         }
+
     </script>
 </h:head>
 <h:body>
@@ -410,7 +375,5 @@
             <p><strong>Type:</strong> <span id="creatureModalType"></span></p>
         </div>
     </div>
-
-    <div id="tooltip" style="display: none; position: absolute; background-color: #333; color: #fff; padding: 5px; border-radius: 3px;"></div>
 </h:body>
 </html>
