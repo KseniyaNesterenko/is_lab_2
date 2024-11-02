@@ -342,7 +342,7 @@
                 <div class="creature-container">
                     <canvas id="commonCanvas" class="book-creature-canvas" width="800" height="600"></canvas>
                     <ui:repeat value="#{bookCreatureBean.paginatedResponse.data}" var="bookCreature">
-                        <div class="creature-item" style="display: none;">
+                        <div class="creature-item" style="display: block;">
                             <canvas class="book-creature-canvas"
                                     data-x="#{bookCreature.coordinates.x}"
                                     data-y="#{bookCreature.coordinates.y}"
@@ -350,8 +350,12 @@
                                     data-name="#{bookCreature.name}"
                                     data-creature-type="#{bookCreature.creatureType}"
                                     data-user-color="#{bookCreature.user.color}"></canvas>
+                            <h:commandButton value="✎" action="#{bookCreatureBean.edit(bookCreature.id)}"
+                                             rendered="#{bookCreature.user.id eq userBean.user.id or userBean.user.role eq 'ADMIN'}"
+                                             styleClass="action-button" />
                         </div>
                     </ui:repeat>
+
                 </div>
             </div>
         </h:form>
