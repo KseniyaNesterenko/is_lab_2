@@ -16,7 +16,12 @@
             document.getElementById('creatureModalName').textContent = creatureName;
             document.getElementById('creatureModalType').textContent = creatureType;
             document.getElementById('creatureModal').style.display = 'block';
+
+            // Установить значение скрытого поля
+            document.getElementById('creatureForm:hiddenCreatureId').value = creatureId;
         }
+
+
 
         function updateTable() {
             document.getElementById('updateForm:updateButton').click();
@@ -350,9 +355,7 @@
                                     data-name="#{bookCreature.name}"
                                     data-creature-type="#{bookCreature.creatureType}"
                                     data-user-color="#{bookCreature.user.color}"></canvas>
-                            <h:commandButton value="✎" action="#{bookCreatureBean.edit(bookCreature.id)}"
-                                             rendered="#{bookCreature.user.id eq userBean.user.id or userBean.user.role eq 'ADMIN'}"
-                                             styleClass="action-button" />
+
                         </div>
                     </ui:repeat>
 
@@ -377,7 +380,14 @@
             <p><strong>ID:</strong> <span id="creatureModalId"></span></p>
             <p><strong>Name:</strong> <span id="creatureModalName"></span></p>
             <p><strong>Type:</strong> <span id="creatureModalType"></span></p>
+            <h:form id="creatureForm">
+                <h:inputHidden id="hiddenCreatureId" value="#{bookCreatureBean.creatureId}" />
+                <h:commandButton value="✎" action="#{bookCreatureBean.edit(bookCreatureBean.creatureId)}"
+                                 styleClass="action-button" />
+            </h:form>
+
         </div>
     </div>
+
 </h:body>
 </html>

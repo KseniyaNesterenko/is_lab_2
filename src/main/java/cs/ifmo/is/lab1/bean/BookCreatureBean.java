@@ -231,7 +231,23 @@ public class BookCreatureBean implements Serializable {
         );
     }
 
+    private Integer creatureId;
+
+    public Integer getCreatureId() {
+        return creatureId;
+    }
+
+    public void setCreatureId(Integer creatureId) {
+        this.creatureId = creatureId;
+    }
+
     public String edit(Integer id) {
+        if (id == null) {
+            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Invalid ID provided.", "Invalid ID provided."));
+            return null;
+        }
+
+        System.out.println("Editing book creature with ID: " + id);
         BookCreature bookCreature = bookCreatureService.findById(id);
         User currentUser = (User) FacesContext.getCurrentInstance().getExternalContext().getSessionMap().get("user");
         if (bookCreature.getUser().getId().equals(currentUser.getId()) || currentUser.getRole() == User.Role.ADMIN) {
@@ -245,7 +261,6 @@ public class BookCreatureBean implements Serializable {
             return null;
         }
     }
-
 
     public String delete(Integer id) {
         BookCreature bookCreature = bookCreatureService.findById(id);
@@ -834,15 +849,6 @@ public class BookCreatureBean implements Serializable {
 
     public String getTakeRingsResult() {
         return takeRingsResult;
-    }
-    private Long creatureModalId;
-
-    public Long getCreatureModalId() {
-        return creatureModalId;
-    }
-
-    public void setCreatureModalId(Long creatureModalId) {
-        this.creatureModalId = creatureModalId;
     }
 
 }
