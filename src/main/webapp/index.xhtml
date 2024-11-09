@@ -11,6 +11,8 @@
     <script src="js/numbers_format.js"></script>
     <script src="js/notifications.js"></script>
     <script>
+        let hoverTimer;
+
         function showCreatureDetails(creatureId, creatureName, creatureType) {
             document.getElementById('creatureModalId').textContent = creatureId;
             document.getElementById('creatureModalName').textContent = creatureName;
@@ -21,7 +23,41 @@
             document.getElementById('creatureForm:hiddenCreatureId').value = creatureId;
         }
 
+        function closeCreatureModal() {
+            document.getElementById('creatureModal').style.display = 'none';
+        }
 
+        let creatures = [];
+        function drawBookCreature(ctx, x, y, creatureType, color, maxX, maxY, axisOffset, creatureId, creatureName) {
+            const radius = 10;
+            const canvasX = (x / maxX) * (ctx.canvas.width - axisOffset) + axisOffset;
+            const canvasY = ctx.canvas.height - ((y / maxY) * (ctx.canvas.height - axisOffset)) - axisOffset;
+
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(canvasX, canvasY, radius, 0, 2 * Math.PI);
+            ctx.fill();
+
+            ctx.fillStyle = 'black';
+            ctx.font = '12px Arial';
+            ctx.fillText(creatureType, canvasX + radius + 5, canvasY + 5);
+            creatures.push({
+                x: canvasX,
+                y: canvasY,
+                radius: radius,
+                creatureId: creatureId,
+                creatureName: creatureName,
+                creatureType: creatureType
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            drawAllBookCreatures();
+            const visualizationDiv = document.getElementById('creatureVisualization');
+            const isVisualizationVisible = localStorage.getItem('isVisualizationVisible') === 'true';
+            visualizationDiv.style.display = isVisualizationVisible ? 'block' : 'none';
+            drawAllBookCreatures();  // Инициализация отрисовки
+        });
 
         function updateTable() {
             document.getElementById('updateForm:updateButton').click();
@@ -58,10 +94,6 @@
             canvas.width = (maxX + 20) * paddingFactor;
             canvas.height = (maxY + 20) * paddingFactor;
         }
-        function closeCreatureModal() {
-            document.getElementById('creatureModal').style.display = 'none';
-        }
-
 
         function drawGrid(ctx, canvasWidth, canvasHeight, maxX, maxY, axisOffset) {
             const gridSize = 10;
@@ -128,6 +160,9 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawGrid(ctx, canvas.width, canvas.height, adjustedMaxX, adjustedMaxY, axisOffset);
 
+            // Clear the creatures array
+            creatures = [];
+
             const creatureElements = document.querySelectorAll('.book-creature-canvas');
             creatureElements.forEach(function(canvas) {
                 const x = parseInt(canvas.getAttribute('data-x'));
@@ -141,34 +176,64 @@
             });
         }
 
+        document.addEventListener('DOMContentLoaded', function() {
+            const canvas = document.getElementById('commonCanvas');
+            const ctx = canvas.getContext('2d');
 
-        function drawBookCreature(ctx, x, y, creatureType, color, maxX, maxY, axisOffset, creatureId, creatureName) {
-            const radius = 10;
-            const canvasX = (x / maxX) * (ctx.canvas.width - axisOffset) + axisOffset;
-            const canvasY = ctx.canvas.height - ((y / maxY) * (ctx.canvas.height - axisOffset)) - axisOffset;
-
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.arc(canvasX, canvasY, radius, 0, 2 * Math.PI);
-            ctx.fill();
-
-            ctx.fillStyle = 'black';
-            ctx.font = '12px Arial';
-            ctx.fillText(creatureType, canvasX + radius + 5, canvasY + 5);
-
-            // Add click event listener
-            ctx.canvas.addEventListener('click', function(event) {
-                const rect = ctx.canvas.getBoundingClientRect();
+            // Add mousemove event listener
+            canvas.addEventListener('mousemove', function(event) {
+                const rect = canvas.getBoundingClientRect();
                 const mouseX = event.clientX - rect.left;
                 const mouseY = event.clientY - rect.top;
 
-                // Check if the click is within the creature's circle
-                const distance = Math.sqrt((mouseX - canvasX) ** 2 + (mouseY - canvasY) ** 2);
-                if (distance &lt;= radius) {
-                    showCreatureDetails(creatureId, creatureName, creatureType);
+                // Check if the mouse is within any creature's circle
+                for (let i = 0; i &lt; creatures.length; i++) {
+                    const creature = creatures[i];
+                    const distance = Math.sqrt((mouseX - creature.x) ** 2 + (mouseY - creature.y) ** 2);
+                    if (distance &lt;= creature.radius) {
+                        clearTimeout(hoverTimer);
+                        hoverTimer = setTimeout(function() {
+                            showCreatureDetails(creature.creatureId, creature.creatureName, creature.creatureType);
+                        }, 500); // Задержка в 500 миллисекунд
+                        return;
+                    }
+                }
+
+                clearTimeout(hoverTimer);
+                closeCreatureModal();
+            });
+
+            // Add mouseout event listener
+            canvas.addEventListener('mouseout', function(event) {
+                clearTimeout(hoverTimer);
+                closeCreatureModal();
+            });
+
+            // Add click event listener
+            canvas.addEventListener('click', function(event) {
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = event.clientX - rect.left;
+                const mouseY = event.clientY - rect.top;
+
+                // Check if the click is within any creature's circle
+                for (let i = 0; i &lt; creatures.length; i++) {
+                    const creature = creatures[i];
+                    const distance = Math.sqrt((mouseX - creature.x) ** 2 + (mouseY - creature.y) ** 2);
+                    if (distance &lt;= creature.radius) {
+                        showCreatureDetails(creature.creatureId, creature.creatureName, creature.creatureType);
+                        // Программно вызвать клик на кнопке редактирования
+                        document.getElementById('creatureForm:editButton').click();
+                        return;
+                    }
                 }
             });
-        }
+
+            drawAllBookCreatures();
+            const visualizationDiv = document.getElementById('creatureVisualization');
+            const isVisualizationVisible = localStorage.getItem('isVisualizationVisible') === 'true';
+            visualizationDiv.style.display = isVisualizationVisible ? 'block' : 'none';
+            drawAllBookCreatures();  // Инициализация отрисовки
+        });
 
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -186,7 +251,6 @@
             visualizationDiv.style.display = isCurrentlyVisible ? 'none' : 'block';
             localStorage.setItem('isVisualizationVisible', !isCurrentlyVisible);
         }
-
     </script>
 </h:head>
 <h:body>
@@ -237,7 +301,7 @@
     </h:form>
 
     <div class="container">
-        <h:form>
+        <h:form id="bubu">
             <h:messages id="messages" styleClass="error-message" />
             <h2>Book Creature Table</h2>
             <h:panelGroup layout="block">
@@ -331,7 +395,7 @@
                     </h:column>
                 </h:dataTable>
             </h:panelGroup>
-            <p:poll interval="2" update="bookCreatureTable" />
+            <p:poll interval="2" update="bubu" />
 
             <h:commandButton value="&#8592;" action="#{bookCreatureBean.previousPage}" disabled="#{bookCreatureBean.paginatedResponse.page == 1}" />
             <h:commandButton value="&#8594;" action="#{bookCreatureBean.nextPage}" disabled="#{bookCreatureBean.paginatedResponse.page * bookCreatureBean.paginatedResponse.pageSize >= bookCreatureBean.paginatedResponse.total}" />
@@ -339,7 +403,7 @@
             <h:commandButton value="Специальные операции" action="special_operations?faces-redirect=true" styleClass="back-button" rendered="#{bookCreatureBean.isUserLoggedIn()}"/>
         </h:form>
 
-        <h:form>
+        <h:form rendered="#{bookCreatureBean.isUserLoggedIn()}">
             <div style="text-align: center; margin-top: 20px;">
                 <h:commandButton value="Визуализация объектов" styleClass="back-button" onclick="toggleVisualization(); return false;" />
             </div>
@@ -363,6 +427,7 @@
             </div>
         </h:form>
 
+
         <h:form>
             <div style="text-align: center; margin-top: 20px;">
                 <h:commandButton value="Создать город" action="magicCity?faces-redirect=true" styleClass="large-button" rendered="#{bookCreatureBean.isUserLoggedIn()}"/>
@@ -382,8 +447,9 @@
             <p><strong>Type:</strong> <span id="creatureModalType"></span></p>
             <h:form id="creatureForm">
                 <h:inputHidden id="hiddenCreatureId" value="#{bookCreatureBean.creatureId}" />
-                <h:commandButton value="✎" action="#{bookCreatureBean.edit(bookCreatureBean.creatureId)}"
-                                 styleClass="action-button" />
+                <h:commandButton id="editButton" value="✎" action="#{bookCreatureBean.edit(bookCreatureBean.creatureId)}"
+                                 styleClass="action-button" style="display: none;" />
+
             </h:form>
 
         </div>

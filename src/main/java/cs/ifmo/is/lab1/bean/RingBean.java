@@ -149,7 +149,7 @@ public class RingBean implements Serializable {
             this.ring = ring;
             return "editRing?faces-redirect=true";
         } else {
-            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "You do not have permission to edit this record.", "You do not have permission to edit this record."));
+            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Это не ваш объект, вы не можете его редактировать", "Это не ваш объект, вы не можете его редактировать"));
             return null;
         }
     }

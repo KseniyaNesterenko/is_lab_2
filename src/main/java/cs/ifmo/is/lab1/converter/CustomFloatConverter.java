@@ -28,7 +28,7 @@ public class CustomFloatConverter implements Converter<Float> {
             }
             return parsedValue;
         } catch (NumberFormatException e) {
-            throw new ConverterException(new FacesMessage(FacesMessage.SEVERITY_ERROR, "Некорректный ввод поля" + coordinateType + "!", "НЕПРАВИЛЬНО☺️"));
+            throw new ConverterException(new FacesMessage(FacesMessage.SEVERITY_ERROR, "Некорректный ввод поля!", "НЕПРАВИЛЬНО☺️"));
         }
     }
 

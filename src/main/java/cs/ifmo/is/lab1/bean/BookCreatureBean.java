@@ -78,7 +78,7 @@ public class BookCreatureBean implements Serializable {
             for (int i = 0; i < 6; i++) {
                 BookCreature defaultBookCreature = new BookCreature();
                 defaultBookCreature.setName("Example " + (i + 1));
-                defaultBookCreature.setCoordinates(new Coordinates(60, 60));
+                defaultBookCreature.setCoordinates(new Coordinates(60+i*10, 60+i*10));
                 defaultBookCreature.setCreationDate(new Date());
                 defaultBookCreature.setAge(2L);
                 defaultBookCreature.setCreatureType(BookCreatureType.HOBBIT);
@@ -257,7 +257,7 @@ public class BookCreatureBean implements Serializable {
             }
             return "edit?faces-redirect=true";
         } else {
-            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "You do not have permission to edit this record.", "You do not have permission to edit this record."));
+            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Это не ваш объект, вы не можете его редактировать", "Это не ваш объект, вы не можете его редактировать"));
             return null;
         }
     }
