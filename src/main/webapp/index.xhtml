@@ -19,7 +19,6 @@
             document.getElementById('creatureModalType').textContent = creatureType;
             document.getElementById('creatureModal').style.display = 'block';
 
-            // Установить значение скрытого поля
             document.getElementById('creatureForm:hiddenCreatureId').value = creatureId;
         }
 
@@ -31,7 +30,6 @@
         function drawBookCreature(ctx, x, y, creatureType, color, maxX, maxY, axisOffset, creatureId, creatureName) {
             const radius = 10;
 
-            // Преобразование координат с учетом отрицательных значений
             const canvasX = ((x + maxX) / (2 * maxX)) * (ctx.canvas.width - 2 * axisOffset) + axisOffset;
             const canvasY = ctx.canvas.height - (((y + maxY) / (2 * maxY)) * (ctx.canvas.height - 2 * axisOffset)) - axisOffset;
 
@@ -112,7 +110,6 @@
             ctx.strokeStyle = '#e0e0e0';
             ctx.lineWidth = 1;
 
-            // Рисуем вертикальные линии
             for (let i = 0; i &lt;= gridSize * 2; i++) {
                 const x = (canvasWidth - 2 * axisOffset) * (i / (gridSize * 2)) + axisOffset;
                 ctx.beginPath();
@@ -121,13 +118,12 @@
                 ctx.stroke();
                 ctx.closePath();
 
-                // Подписи для оси X (чуть ниже линии оси X)
+                // Подписи для оси X
                 ctx.fillStyle = '#000';
                 const value = (maxX * (i - gridSize) / gridSize).toFixed(0);
                 ctx.fillText(value, x - 10, canvasHeight / 2 + 15); // Смещение текста ниже оси
             }
 
-            // Рисуем горизонтальные линии
             for (let i = 0; i &lt;= gridSize * 2; i++) {
                 const y = canvasHeight - ((canvasHeight - 2 * axisOffset) * (i / (gridSize * 2)) + axisOffset);
                 ctx.beginPath();
@@ -136,10 +132,10 @@
                 ctx.stroke();
                 ctx.closePath();
 
-                // Подписи для оси Y (справа от линии оси Y)
+                // Подписи для оси Y
                 ctx.fillStyle = '#000';
                 const value = (maxY * (i - gridSize) / gridSize).toFixed(0);
-                ctx.fillText(value, canvasWidth / 2 + 5, y + 5); // Смещение текста вправо от оси
+                ctx.fillText(value, canvasWidth / 2 + 5, y + 5);
             }
 
             ctx.strokeStyle = '#000';
@@ -171,7 +167,6 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawGrid(ctx, canvas.width, canvas.height, adjustedMaxX, adjustedMaxY, axisOffset);
 
-            // Clear the creatures array
             creatures = [];
 
             const creatureElements = document.querySelectorAll('.book-creature-canvas');
@@ -191,13 +186,11 @@
             const canvas = document.getElementById('commonCanvas');
             const ctx = canvas.getContext('2d');
 
-            // Add mousemove event listener
             canvas.addEventListener('mousemove', function(event) {
                 const rect = canvas.getBoundingClientRect();
                 const mouseX = event.clientX - rect.left;
                 const mouseY = event.clientY - rect.top;
 
-                // Check if the mouse is within any creature's circle
                 for (let i = 0; i &lt; creatures.length; i++) {
                     const creature = creatures[i];
                     const distance = Math.sqrt((mouseX - creature.x) ** 2 + (mouseY - creature.y) ** 2);
@@ -205,7 +198,7 @@
                         clearTimeout(hoverTimer);
                         hoverTimer = setTimeout(function() {
                             showCreatureDetails(creature.creatureId, creature.creatureName, creature.creatureType);
-                        }, 500); // Задержка в 500 миллисекунд
+                        }, 500);
                         return;
                     }
                 }
@@ -214,25 +207,21 @@
                 closeCreatureModal();
             });
 
-            // Add mouseout event listener
             canvas.addEventListener('mouseout', function(event) {
                 clearTimeout(hoverTimer);
                 closeCreatureModal();
             });
 
-            // Add click event listener
             canvas.addEventListener('click', function(event) {
                 const rect = canvas.getBoundingClientRect();
                 const mouseX = event.clientX - rect.left;
                 const mouseY = event.clientY - rect.top;
 
-                // Check if the click is within any creature's circle
                 for (let i = 0; i &lt; creatures.length; i++) {
                     const creature = creatures[i];
                     const distance = Math.sqrt((mouseX - creature.x) ** 2 + (mouseY - creature.y) ** 2);
                     if (distance &lt;= creature.radius) {
                         showCreatureDetails(creature.creatureId, creature.creatureName, creature.creatureType);
-                        // Программно вызвать клик на кнопке редактирования
                         document.getElementById('creatureForm:editButton').click();
                         return;
                     }
@@ -243,7 +232,7 @@
             const visualizationDiv = document.getElementById('creatureVisualization');
             const isVisualizationVisible = localStorage.getItem('isVisualizationVisible') === 'true';
             visualizationDiv.style.display = isVisualizationVisible ? 'block' : 'none';
-            drawAllBookCreatures();  // Инициализация отрисовки
+            drawAllBookCreatures();
         });
 
 
@@ -252,7 +241,7 @@
             const visualizationDiv = document.getElementById('creatureVisualization');
             const isVisualizationVisible = localStorage.getItem('isVisualizationVisible') === 'true';
             visualizationDiv.style.display = isVisualizationVisible ? 'block' : 'none';
-            drawAllBookCreatures();  // Инициализация отрисовки
+            drawAllBookCreatures();
         });
 
         function toggleVisualization() {
