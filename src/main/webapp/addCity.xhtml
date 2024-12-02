@@ -53,7 +53,7 @@
             <h:outputLabel for="cityGovernor" value="Magic City Governor:" />
             <h:panelGroup style="position: relative;">
                 <h:selectOneMenu id="cityGovernor" value="#{magicCityBean.magicCity.governor}">
-                    <f:selectItems value="#{bookCreatureBean.bookCreatureTypes}" />
+                    <f:selectItems value="#{bookCreatureBean.governorTypes}" />
                 </h:selectOneMenu>
                 <h:commandButton value="?" type="button" onclick="showTooltip('governorTooltip', 'Выберите тип существа для губернатора города');" />
                 <div id="governorTooltip" class="tooltip"></div>

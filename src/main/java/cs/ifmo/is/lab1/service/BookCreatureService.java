@@ -143,7 +143,7 @@ public class BookCreatureService implements Serializable {
                 defaultBookCreature.setCreationDate(new Date());
                 defaultBookCreature.setAge(2L);
                 defaultBookCreature.setCreatureType(BookCreatureType.HOBBIT);
-                defaultBookCreature.setCreatureLocation(new MagicCity("TEST", 100.0, 1000, new Date(), defaultBookCreature.getCreatureType(), true, 10, currentUser));
+                defaultBookCreature.setCreatureLocation(new MagicCity("TEST", 100.0, 1000, new Date(), MagicCity.GovernorType.GOLLUM, true, 10, currentUser));
                 defaultBookCreature.setAttackLevel(5F);
                 defaultBookCreature.setDefenseLevel(5F);
                 defaultBookCreature.setRing(new Ring("Example Ring " + (i + 1), 10, currentUser));
@@ -151,7 +151,7 @@ public class BookCreatureService implements Serializable {
 
                 create(defaultBookCreature);
             }
-            MagicCity magicCity = new MagicCity("Mordor", 100.0, 1000, new Date(), BookCreatureType.GOLLUM, true, 10, currentUser);
+            MagicCity magicCity = new MagicCity("Mordor", 100.0, 1000, new Date(), MagicCity.GovernorType.GOLLUM, true, 10, currentUser);
             create(magicCity);
         }
     }
@@ -162,7 +162,7 @@ public class BookCreatureService implements Serializable {
         bookCreature.setCreationDate(new Date());
         bookCreature.setAge(2L);
         bookCreature.setCreatureType(BookCreatureType.HOBBIT);
-        bookCreature.setCreatureLocation(new MagicCity("Default City", 100.0, 1000, new Date(), bookCreature.getCreatureType(), true, 10, currentUser));
+        bookCreature.setCreatureLocation(new MagicCity("Default City", 100.0, 1000, new Date(), MagicCity.GovernorType.GOLLUM, true, 10, currentUser));
         bookCreature.setAttackLevel(5F);
         bookCreature.setDefenseLevel(5F);
         bookCreature.setRing(new Ring("Default Ring", 10, currentUser));
@@ -197,7 +197,7 @@ public class BookCreatureService implements Serializable {
         defaultBookCreature.setAttackLevel(5F);
         defaultBookCreature.setDefenseLevel(5F);
         defaultBookCreature.setRing(new Ring("Example Ring", 10, currentUser));
-        defaultBookCreature.setCreatureLocation(new MagicCity("Example City", 100.0, 1000, new Date(), defaultBookCreature.getCreatureType(), true, 10, currentUser));
+        defaultBookCreature.setCreatureLocation(new MagicCity("Example City", 100.0, 1000, new Date(), MagicCity.GovernorType.GOLLUM, true, 10, currentUser));
         defaultBookCreature.setUser(currentUser);
 
         create(defaultBookCreature);

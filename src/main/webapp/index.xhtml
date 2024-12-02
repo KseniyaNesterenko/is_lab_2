@@ -30,8 +30,10 @@
         let creatures = [];
         function drawBookCreature(ctx, x, y, creatureType, color, maxX, maxY, axisOffset, creatureId, creatureName) {
             const radius = 10;
-            const canvasX = (x / maxX) * (ctx.canvas.width - axisOffset) + axisOffset;
-            const canvasY = ctx.canvas.height - ((y / maxY) * (ctx.canvas.height - axisOffset)) - axisOffset;
+
+            // Преобразование координат с учетом отрицательных значений
+            const canvasX = ((x + maxX) / (2 * maxX)) * (ctx.canvas.width - 2 * axisOffset) + axisOffset;
+            const canvasY = ctx.canvas.height - (((y + maxY) / (2 * maxY)) * (ctx.canvas.height - 2 * axisOffset)) - axisOffset;
 
             ctx.fillStyle = color;
             ctx.beginPath();
@@ -50,6 +52,7 @@
                 creatureType: creatureType
             });
         }
+
 
         document.addEventListener('DOMContentLoaded', function() {
             drawAllBookCreatures();
@@ -77,6 +80,8 @@
         function getMaxCoordinates() {
             let maxX = 100;
             let maxY = 200;
+            let minX = 0;
+            let minY = 0;
 
             const creatureElements = document.querySelectorAll('.book-creature-canvas');
             creatureElements.forEach(function(canvas) {
@@ -84,11 +89,17 @@
                 const y = parseInt(canvas.getAttribute('data-y'));
 
                 if (x > maxX) maxX = x;
+                if (x &lt; minX) minX = x;
                 if (y > maxY) maxY = y;
+                if (y &lt; minY) minY = y;
             });
 
-            return { maxX, maxY };
+            const rangeX = Math.max(Math.abs(minX), maxX);
+            const rangeY = Math.max(Math.abs(minY), maxY);
+
+            return { maxX: rangeX, maxY: rangeY };
         }
+
 
         function adjustCanvasSize(canvas, maxX, maxY, paddingFactor) {
             canvas.width = (maxX + 20) * paddingFactor;
@@ -102,27 +113,33 @@
             ctx.lineWidth = 1;
 
             // Рисуем вертикальные линии
-            for (let i = 0; i &lt;= gridSize; i++) {
-                const x = (canvasWidth - axisOffset) * (i / gridSize) + axisOffset;
+            for (let i = 0; i &lt;= gridSize * 2; i++) {
+                const x = (canvasWidth - 2 * axisOffset) * (i / (gridSize * 2)) + axisOffset;
                 ctx.beginPath();
                 ctx.moveTo(x, 0);
                 ctx.lineTo(x, canvasHeight);
                 ctx.stroke();
                 ctx.closePath();
+
+                // Подписи для оси X (чуть ниже линии оси X)
+                ctx.fillStyle = '#000';
+                const value = (maxX * (i - gridSize) / gridSize).toFixed(0);
+                ctx.fillText(value, x - 10, canvasHeight / 2 + 15); // Смещение текста ниже оси
             }
 
-            // Рисуем горизонтальные линии и отображаем значения по оси Y
-            for (let i = 0; i &lt;= gridSize; i++) {
-                const y = canvasHeight - (canvasHeight - axisOffset) * (i / gridSize) - axisOffset;
+            // Рисуем горизонтальные линии
+            for (let i = 0; i &lt;= gridSize * 2; i++) {
+                const y = canvasHeight - ((canvasHeight - 2 * axisOffset) * (i / (gridSize * 2)) + axisOffset);
                 ctx.beginPath();
                 ctx.moveTo(0, y);
                 ctx.lineTo(canvasWidth, y);
                 ctx.stroke();
                 ctx.closePath();
 
+                // Подписи для оси Y (справа от линии оси Y)
                 ctx.fillStyle = '#000';
-                ctx.font = '10px Arial';
-                ctx.fillText(((maxY / gridSize) * i).toFixed(0), 2, y - 2); // Значения по оси Y
+                const value = (maxY * (i - gridSize) / gridSize).toFixed(0);
+                ctx.fillText(value, canvasWidth / 2 + 5, y + 5); // Смещение текста вправо от оси
             }
 
             ctx.strokeStyle = '#000';
@@ -130,23 +147,17 @@
 
             // Ось Y
             ctx.beginPath();
-            ctx.moveTo(axisOffset, 0);
-            ctx.lineTo(axisOffset, canvasHeight);
+            ctx.moveTo(canvasWidth / 2, 0);
+            ctx.lineTo(canvasWidth / 2, canvasHeight);
             ctx.stroke();
 
-            // Ось X (внизу)
+            // Ось X
             ctx.beginPath();
-            ctx.moveTo(axisOffset, canvasHeight - axisOffset);
-            ctx.lineTo(canvasWidth, canvasHeight - axisOffset);
+            ctx.moveTo(0, canvasHeight / 2);
+            ctx.lineTo(canvasWidth, canvasHeight / 2);
             ctx.stroke();
-
-            // Отображаем значения по оси X внизу
-            ctx.fillStyle = '#000';
-            for (let i = 0; i &lt;= gridSize; i++) {
-                const x = (canvasWidth - axisOffset) * (i / gridSize) + axisOffset;
-                ctx.fillText(((maxX / gridSize) * i).toFixed(0), x + 2, canvasHeight - axisOffset + 12); // Значения по оси X
-            }
         }
+
 
         function drawAllBookCreatures() {
             const canvas = document.getElementById('commonCanvas');

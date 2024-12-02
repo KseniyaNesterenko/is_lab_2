@@ -60,7 +60,7 @@ public class MagicCityBean implements Serializable {
             magicCity.setArea(100.0);
             magicCity.setPopulation(1000);
             magicCity.setEstablishmentDate(new Date());
-            magicCity.setGovernor(BookCreatureType.GOLLUM);
+            magicCity.setGovernor(MagicCity.GovernorType.GOLLUM);
             magicCity.setCapital(true);
             magicCity.setPopulationDensity(10);
         }
@@ -100,7 +100,7 @@ public class MagicCityBean implements Serializable {
                 defaultMagicCity.setArea(100.0);
                 defaultMagicCity.setPopulation(1000);
                 defaultMagicCity.setEstablishmentDate(new Date());
-                defaultMagicCity.setGovernor(BookCreatureType.GOLLUM);
+                defaultMagicCity.setGovernor(MagicCity.GovernorType.GOLLUM);
                 defaultMagicCity.setCapital(true);
                 defaultMagicCity.setPopulationDensity(10);
 

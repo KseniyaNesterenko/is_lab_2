@@ -30,7 +30,7 @@ public class MagicCity implements Auditable {
     private Date establishmentDate;
 
     @Enumerated(EnumType.STRING)
-    private BookCreatureType governor;
+    private GovernorType governor;
 
     private boolean capital;
 
@@ -41,7 +41,7 @@ public class MagicCity implements Auditable {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    public MagicCity(String name, Double area, Integer population, Date establishmentDate, BookCreatureType governor, boolean capital, int populationDensity, User user) {
+    public MagicCity(String name, Double area, Integer population, Date establishmentDate, GovernorType governor, boolean capital, int populationDensity, User user) {
         this.name = name;
         this.area = area;
         this.population = population;
@@ -68,11 +68,11 @@ public class MagicCity implements Auditable {
         this.capital = capital;
     }
 
-    public BookCreatureType getGovernor() {
+    public GovernorType getGovernor() {
         return governor;
     }
 
-    public void setGovernor(BookCreatureType governor) {
+    public void setGovernor(GovernorType governor) {
         this.governor = governor;
     }
 
@@ -136,7 +136,12 @@ public class MagicCity implements Auditable {
             }
         }
     }
-
+    public enum GovernorType {
+        HOBBIT,
+        GOLLUM,
+        HUMAN
+        // Добавьте другие типы существ при необходимости
+    }
 
 
 }

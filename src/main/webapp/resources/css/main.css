@@ -442,6 +442,18 @@ td {
 }
 
 
+.creature-visualization {
+    margin: 0;
+    padding: 0;
+    display: inline-block;  /* Это уберет лишние пробелы вокруг контейнера */
+    text-align: center;
+}
+
+#commonCanvas {
+    display: block;  /* Убирает возможные пустые пространства вокруг канваса */
+    margin: 0 auto;  /* Центрирует канвас в контейнере */
+}
+
 .ring-container {
     display: flex;
     flex-wrap: wrap;

@@ -56,7 +56,7 @@ public class BookCreatureBean implements Serializable {
             bookCreature.setAge(2L);
             bookCreature.setCreatureType(BookCreatureType.HOBBIT);
             User currentUser = (User) FacesContext.getCurrentInstance().getExternalContext().getSessionMap().get("user");
-            bookCreature.setCreatureLocation(new MagicCity("Default City", 100.0, 1000, new Date(), bookCreature.getCreatureType(), true, 10, currentUser));
+            bookCreature.setCreatureLocation(new MagicCity("Default City", 100.0, 1000, new Date(), MagicCity.GovernorType.GOLLUM, true, 10, currentUser));
             bookCreature.setAttackLevel(5F);
             bookCreature.setDefenseLevel(5F);
             bookCreature.setRing(new Ring("Default Ring", 10, currentUser));
@@ -64,8 +64,12 @@ public class BookCreatureBean implements Serializable {
         addDefaultBookCreaturesIfNotExist();
     }
 
+
+
+
     public void updateBookCreatures() {
         loadPaginatedBookCreatures();
+
     }
 
     private void addDefaultBookCreaturesIfNotExist() {
@@ -75,14 +79,14 @@ public class BookCreatureBean implements Serializable {
 
         List<BookCreature> existingCreatures = bookCreatureService.findByUserId(currentUser.getId());
         if (existingCreatures.isEmpty()) {
-            for (int i = 0; i < 6; i++) {
+            for (int i = 0; i < 3; i++) {
                 BookCreature defaultBookCreature = new BookCreature();
                 defaultBookCreature.setName("Example " + (i + 1));
-                defaultBookCreature.setCoordinates(new Coordinates(60+i*10, 60+i*10));
+                defaultBookCreature.setCoordinates(new Coordinates(60+i*20, 60+i*20));
                 defaultBookCreature.setCreationDate(new Date());
                 defaultBookCreature.setAge(2L);
                 defaultBookCreature.setCreatureType(BookCreatureType.HOBBIT);
-                defaultBookCreature.setCreatureLocation(new MagicCity("TEST", 100.0, 1000, new Date(), defaultBookCreature.getCreatureType(), true, 10, currentUser));
+                defaultBookCreature.setCreatureLocation(new MagicCity("TEST", 100.0, 1000, new Date(), MagicCity.GovernorType.HOBBIT, true, 10, currentUser));
                 defaultBookCreature.setAttackLevel(5F);
                 defaultBookCreature.setDefenseLevel(5F);
                 defaultBookCreature.setRing(new Ring("Example Ring " + (i + 1), 10, currentUser));
@@ -90,7 +94,7 @@ public class BookCreatureBean implements Serializable {
 
                 bookCreatureService.create(defaultBookCreature);
             }
-            MagicCity magicCity = new MagicCity("Mordor", 100.0, 1000, new Date(), BookCreatureType.GOLLUM, true, 10, currentUser);
+            MagicCity magicCity = new MagicCity("Mordor", 100.0, 1000, new Date(), MagicCity.GovernorType.HOBBIT, true, 10, currentUser);
             bookCreatureService.create(magicCity);
 
         }
@@ -136,7 +140,7 @@ public class BookCreatureBean implements Serializable {
         defaultBookCreature.setDefenseLevel(5F);
         User currentUser = (User) FacesContext.getCurrentInstance().getExternalContext().getSessionMap().get("user");
         defaultBookCreature.setRing(new Ring("Example Ring", 10, currentUser));
-        defaultBookCreature.setCreatureLocation(new MagicCity("Example City", 100.0, 1000, new Date(), defaultBookCreature.getCreatureType(), true, 10, currentUser));
+        defaultBookCreature.setCreatureLocation(new MagicCity("Example City", 100.0, 1000, new Date(), MagicCity.GovernorType.HOBBIT, true, 10, currentUser));
         defaultBookCreature.setUser(currentUser);
 
         bookCreatureService.create(defaultBookCreature);
@@ -291,22 +295,32 @@ public class BookCreatureBean implements Serializable {
         if (validateAllFields()) {
             try {
                 User currentUser = (User) FacesContext.getCurrentInstance().getExternalContext().getSessionMap().get("user");
-                bookCreature.setUser(currentUser);
 
-                if (bookCreature.getRing() == null || bookCreature.getRing().getId() == null) {
-                    Ring newRing = new Ring();
-                    newRing.setName(bookCreature.getRing().getName());
-                    newRing.setPower(bookCreature.getRing().getPower());
-                    newRing.setUser(currentUser);
-                    bookCreatureService.createRing(newRing);
-                    bookCreature.setRing(newRing);
+                // Проверяем, что текущий пользователь имеет право редактировать объект
+                if (bookCreature.getUser().getId().equals(currentUser.getId()) || currentUser.getRole() == User.Role.ADMIN) {
+                    // Не изменяем поле user, если оно уже установлено
+                    if (bookCreature.getUser() == null) {
+                        bookCreature.setUser(currentUser);
+                    }
+
+                    if (bookCreature.getRing() == null || bookCreature.getRing().getId() == null) {
+                        Ring newRing = new Ring();
+                        newRing.setName(bookCreature.getRing().getName());
+                        newRing.setPower(bookCreature.getRing().getPower());
+                        newRing.setUser(currentUser);
+                        bookCreatureService.createRing(newRing);
+                        bookCreature.setRing(newRing);
+                    } else {
+                        bookCreature.getRing().setUser(currentUser);
+                    }
+
+                    bookCreatureService.update(bookCreature);
+                    loadPaginatedBookCreatures();
+                    return "index?faces-redirect=true";
                 } else {
-                    bookCreature.getRing().setUser(currentUser);
+                    FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Это не ваш объект, вы не можете его редактировать", "Это не ваш объект, вы не можете его редактировать"));
+                    return null;
                 }
-
-                bookCreatureService.update(bookCreature);
-                loadPaginatedBookCreatures();
-                return "index?faces-redirect=true";
             } catch (Exception e) {
                 throw e;
             }
@@ -318,12 +332,17 @@ public class BookCreatureBean implements Serializable {
 
 
 
+
     public BookCreature getBookCreatureById(Integer id) {
         return bookCreatureService.findById(id);
     }
 
     public List<BookCreatureType> getBookCreatureTypes() {
         return Arrays.asList(BookCreatureType.values());
+    }
+
+    public List<MagicCity.GovernorType> getGovernorTypes() {
+        return Arrays.asList(MagicCity.GovernorType.values());
     }
 
     public String getBookCreatureInfoById(Integer id) {
