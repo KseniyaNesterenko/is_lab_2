@@ -463,3 +463,22 @@ td {
 .ring-canvas {
     border: 1px solid #ccc;
 }
+
+.import-button {
+    background-color: rgba(92, 208, 198, 0.93); /* Розовый цвет кнопки */
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 20px;
+    margin-right: 10px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.import-button:hover {
+    background-color: rgba(92, 219, 208, 0.41); /* Темно-розовый цвет при наведении */
+    transform: scale(1.05); /* Увеличение при наведении */
+}

@@ -1,5 +1,7 @@
 package cs.ifmo.is.lab1.bean;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import cs.ifmo.is.lab1.dto.PaginatedResponse;
 import cs.ifmo.is.lab1.model.*;
 import cs.ifmo.is.lab1.service.BookCreatureService;
@@ -13,6 +15,11 @@ import jakarta.faces.event.AjaxBehaviorEvent;
 import jakarta.inject.Named;
 import jakarta.enterprise.context.SessionScoped;
 import jakarta.inject.Inject;
+import jakarta.servlet.http.Part;
+import org.primefaces.model.file.UploadedFile;
+
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -868,6 +875,92 @@ public class BookCreatureBean implements Serializable {
 
     public String getTakeRingsResult() {
         return takeRingsResult;
+    }
+
+    private Part uploadedFile;
+
+    // Геттеры и сеттеры
+    public Part getUploadedFile() {
+        return uploadedFile;
+    }
+
+    public void setUploadedFile(Part uploadedFile) {
+        this.uploadedFile = uploadedFile;
+    }
+
+    public void importBookCreatures() {
+        if (uploadedFile != null) {
+            try (InputStream inputStream = uploadedFile.getInputStream()) {
+                List<BookCreature> bookCreatures = parseFile(inputStream);
+                bookCreatureService.importBookCreatures(bookCreatures);
+                FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, "Импорт успешно завершен.", null));
+            } catch (IllegalArgumentException e) {
+                FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Ошибка валидации: " + e.getMessage(), null));
+            } catch (IOException e) {
+                FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Ошибка при чтении файла.", null));
+            } catch (Exception e) {
+                FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Ошибка при импорте данных: " + e.getMessage(), null));
+            }
+        } else {
+            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Пожалуйста, выберите файл для импорта.", null));
+        }
+    }
+
+
+    private List<BookCreature> parseFile(InputStream inputStream) {
+        final List<BookCreature> bookCreaturesFromFile = new ArrayList<>();
+        ObjectMapper mapper = new ObjectMapper();
+
+        try {
+            List<BookCreature> parsedCreatures = mapper.readValue(inputStream, new TypeReference<List<BookCreature>>() {});
+            User currentUser = (User) FacesContext.getCurrentInstance().getExternalContext().getSessionMap().get("user");
+
+            for (BookCreature bookCreature : parsedCreatures) {
+                bookCreature.setUser(currentUser);
+
+                // Проверка и привязка сущностей
+                if (bookCreature.getCreatureLocation() != null) {
+                    MagicCity magicCity = bookCreatureService.findMagicCityById(bookCreature.getCreatureLocation().getId());
+                    if (magicCity != null) {
+                        User currentUser1 = (User) FacesContext.getCurrentInstance().getExternalContext().getSessionMap().get("user");
+                        magicCity.setUser(currentUser1);
+                        bookCreature.setCreatureLocation(magicCity);
+                    }
+                }
+
+                if (bookCreature.getRing() != null) {
+                    Ring ring = bookCreatureService.findRingById(bookCreature.getRing().getId());
+                    if (ring != null) {
+                        User currentUser2 = (User) FacesContext.getCurrentInstance().getExternalContext().getSessionMap().get("user");
+                        ring.setUser(currentUser2);
+                        bookCreature.setRing(ring);
+                    }
+                }
+
+
+
+
+                // Использование метода validateAllFields
+                BookCreature temp = this.bookCreature; // Сохранение текущего состояния
+                this.bookCreature = bookCreature; // Подмена объекта для валидации
+
+                if (validateAllFields()) {
+                    bookCreaturesFromFile.add(bookCreature);
+                } else {
+                    FacesContext.getCurrentInstance().addMessage(null,
+                            new FacesMessage(FacesMessage.SEVERITY_WARN,
+                                    "Некоторые данные не прошли валидацию. Проверьте ввод.",
+                                    null));
+                }
+
+                this.bookCreature = temp; // Восстановление состояния
+
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Ошибка при парсинге файла: " + e.getMessage(), e);
+        }
+
+        return bookCreaturesFromFile;
     }
 
 }

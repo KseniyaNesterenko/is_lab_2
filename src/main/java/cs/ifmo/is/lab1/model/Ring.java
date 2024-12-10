@@ -16,6 +16,7 @@ public class Ring implements Auditable {
     @Column(nullable = false)
     private String name;
 
+    @Column(nullable = false)
     private Integer power;
 
     @ManyToOne

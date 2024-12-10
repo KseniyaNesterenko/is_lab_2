@@ -251,6 +251,10 @@
             visualizationDiv.style.display = isCurrentlyVisible ? 'none' : 'block';
             localStorage.setItem('isVisualizationVisible', !isCurrentlyVisible);
         }
+        document.addEventListener('DOMContentLoaded', function() {
+            drawAllBookCreatures(); // Начальная отрисовка
+            setInterval(drawAllBookCreatures, 1000); // Обновление каждые 2 секунды
+        });
     </script>
 </h:head>
 <h:body>
@@ -402,30 +406,49 @@
             <h:commandButton value="Добавить объект" action="addBookCreature?faces-redirect=true" styleClass="back-button" rendered="#{bookCreatureBean.isUserLoggedIn()}"/>
             <h:commandButton value="Специальные операции" action="special_operations?faces-redirect=true" styleClass="back-button" rendered="#{bookCreatureBean.isUserLoggedIn()}"/>
         </h:form>
+        <h:form enctype="multipart/form-data">
+            <h:outputLabel for="file" value="Выберите файл для импорта:" />
+            <h:inputFile id="file" value="#{bookCreatureBean.uploadedFile}" />
+            <h:commandButton value="Импортировать" action="#{bookCreatureBean.importBookCreatures}" styleClass="import-button" rendered="#{bookCreatureBean.isUserLoggedIn()}" />
+            <h:messages />
+        </h:form>
 
         <h:form rendered="#{bookCreatureBean.isUserLoggedIn()}">
             <div style="text-align: center; margin-top: 20px;">
                 <h:commandButton value="Визуализация объектов" styleClass="back-button" onclick="toggleVisualization(); return false;" />
             </div>
-            <div id="creatureVisualization" class="creature-visualization" style="display: none;">
-                <div class="creature-container">
-                    <canvas id="commonCanvas" class="book-creature-canvas" width="800" height="600"></canvas>
-                    <ui:repeat value="#{bookCreatureBean.paginatedResponse.data}" var="bookCreature">
-                        <div class="creature-item" style="display: block;">
-                            <canvas class="book-creature-canvas"
-                                    data-x="#{bookCreature.coordinates.x}"
-                                    data-y="#{bookCreature.coordinates.y}"
-                                    data-id="#{bookCreature.id}"
-                                    data-name="#{bookCreature.name}"
-                                    data-creature-type="#{bookCreature.creatureType}"
-                                    data-user-color="#{bookCreature.user.color}"></canvas>
+            <h:form id="kiki">
+                <div id="creatureVisualization" class="creature-visualization">
+                    <div class="creature-container">
+                        <!-- Главный холст, который не будет обновляться -->
+                        <canvas id="commonCanvas" class="book-creature-canvas" width="800" height="600"></canvas>
 
-                        </div>
-                    </ui:repeat>
-
+                        <!-- Добавляем контейнер для динамического списка существ -->
+                        <h:panelGroup id="creatureListContainer">
+                            <ui:repeat value="#{bookCreatureBean.paginatedResponse.data}" var="bookCreature">
+                                <div class="creature-item" style="display: block;">
+                                    <canvas class="book-creature-canvas"
+                                            data-x="#{bookCreature.coordinates.x}"
+                                            data-y="#{bookCreature.coordinates.y}"
+                                            data-id="#{bookCreature.id}"
+                                            data-name="#{bookCreature.name}"
+                                            data-creature-type="#{bookCreature.creatureType}"
+                                            data-user-color="#{bookCreature.user.color}"></canvas>
+                                </div>
+                            </ui:repeat>
+                        </h:panelGroup>
+                    </div>
                 </div>
-            </div>
+
+                <!-- Обновляем только список существ без самого холста -->
+                <p:poll interval="2" update="creatureListContainer" />
+            </h:form>
         </h:form>
+
+
+
+
+
 
 
         <h:form>

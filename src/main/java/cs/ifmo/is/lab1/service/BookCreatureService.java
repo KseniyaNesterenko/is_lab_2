@@ -10,6 +10,8 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
+import jakarta.persistence.PersistenceContext;
+import jakarta.transaction.Transactional;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -203,11 +205,37 @@ public class BookCreatureService implements Serializable {
         create(defaultBookCreature);
     }
 
+    @Transactional
+    public void importBookCreatures(List<BookCreature> bookCreatures) {
+        EntityManager em = emf.createEntityManager();
+        try {
+            em.getTransaction().begin();
 
+            for (BookCreature bookCreature : bookCreatures) {
+                validateBookCreature(bookCreature);
+                em.persist(bookCreature);
+            }
 
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            throw new RuntimeException("Ошибка при импорте: " + e.getMessage(), e);
+        } finally {
+            em.close();
+        }
+    }
 
+    // Метод для проверки валидации объекта
+    private void validateBookCreature(BookCreature bookCreature) {
+        if (bookCreature.getName() == null || bookCreature.getName().isEmpty()) {
+            throw new IllegalArgumentException("Имя существа не может быть пустым.");
+        }
+        if (bookCreature.getAge() == null || bookCreature.getAge() <= 0) {
+            throw new IllegalArgumentException("Возраст существа должен быть положительным числом.");
+        }
+        // Добавьте другие проверки в соответствии с требованиями предметной области
+    }
 
-//    public boolean isLinkedToOtherObjects(Integer id) {
-//        return bookCreatureRepository.isLinkedToOtherObjects(id);
-//    }
 }
