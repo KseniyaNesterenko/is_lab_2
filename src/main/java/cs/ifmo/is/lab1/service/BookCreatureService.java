@@ -205,6 +205,7 @@ public class BookCreatureService implements Serializable {
         create(defaultBookCreature);
     }
 
+
     @Transactional
     public void importBookCreatures(List<BookCreature> bookCreatures) {
         EntityManager em = emf.createEntityManager();
@@ -227,15 +228,68 @@ public class BookCreatureService implements Serializable {
         }
     }
 
-    // Метод для проверки валидации объекта
+
     private void validateBookCreature(BookCreature bookCreature) {
         if (bookCreature.getName() == null || bookCreature.getName().isEmpty()) {
             throw new IllegalArgumentException("Имя существа не может быть пустым.");
         }
-        if (bookCreature.getAge() == null || bookCreature.getAge() <= 0) {
-            throw new IllegalArgumentException("Возраст существа должен быть положительным числом.");
+
+        Object x = bookCreature.getCoordinates().getX();
+        if (x == null || !(x instanceof Integer) || (Integer) x >= 488) {
+            throw new IllegalArgumentException("X обязательно к заполнению, должно быть меньше 488 и числом.");
         }
-        // Добавьте другие проверки в соответствии с требованиями предметной области
+
+        Object y = bookCreature.getCoordinates().getY();
+        if (y == null || !(y instanceof Integer)) {
+            throw new IllegalArgumentException("Y обязательно к заполнению и должно быть числом.");
+        }
+
+        if (bookCreature.getAge() == null || !(bookCreature.getAge() instanceof Long) || bookCreature.getAge() < 0) {
+            throw new IllegalArgumentException("Возраст обязательно к заполнению и должен быть положительным числом.");
+        }
+
+        if (bookCreature.getCreatureType() == null) {
+            throw new IllegalArgumentException("Тип существа обязателен к заполнению.");
+        }
+
+        if ("Mordor".equals(bookCreature.getCreatureLocation().getName())) {
+            throw new IllegalArgumentException("Город не может называться Mordor.");
+        }
+
+        if (bookCreature.getCreatureLocation().getName() == null || bookCreature.getCreatureLocation().getName().isEmpty()) {
+            throw new IllegalArgumentException("Имя города обязательно к заполнению.");
+        }
+
+        if (bookCreature.getCreatureLocation().getArea() == null || bookCreature.getCreatureLocation().getArea() <= 0) {
+            throw new IllegalArgumentException("Площадь города обязательна к заполнению и должна быть больше 0.");
+        }
+
+        Object population = bookCreature.getCreatureLocation().getPopulation();
+        if (population == null || !(population instanceof Integer) || (Integer) population <= 0) {
+            throw new IllegalArgumentException("Население города обязательно к заполнению и должно быть положительным числом.");
+        }
+
+        Object populationDensity = bookCreature.getCreatureLocation().getPopulationDensity();
+        if (populationDensity == null || !(populationDensity instanceof Integer) || (Integer) populationDensity <= 0) {
+            throw new IllegalArgumentException("Плотность населения города обязательна к заполнению и должна быть положительным числом.");
+        }
+
+        if (bookCreature.getAttackLevel() == null || bookCreature.getAttackLevel() <= 0) {
+            throw new IllegalArgumentException("Уровень атаки обязателен к заполнению и должен быть больше 0.");
+        }
+
+        if (bookCreature.getDefenseLevel() == null || bookCreature.getDefenseLevel() <= 0) {
+            throw new IllegalArgumentException("Уровень защиты обязателен к заполнению и должен быть больше 0.");
+        }
+
+        if (bookCreature.getRing().getName() == null || bookCreature.getRing().getName().isEmpty()) {
+            throw new IllegalArgumentException("Имя кольца обязательно к заполнению.");
+        }
+
+        Object ringPower = bookCreature.getRing().getPower();
+        if (ringPower == null || !(ringPower instanceof Integer) || (Integer) ringPower <= 0) {
+            throw new IllegalArgumentException("Сила кольца обязательна к заполнению и должна быть положительным числом.");
+        }
     }
 
 }

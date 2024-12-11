@@ -1,16 +1,15 @@
 [
   {
-    "name": "Creature6687",
+    "name": "Вупак",
     "coordinates": {
       "x": 200,
       "y": 200
     },
     "creationDate": "2023-10-01T12:00:00Z",
-    "age": 5,
+    "age": 7,
     "creatureType": "HOBBIT",
     "creatureLocation": {
-      "id": 1,
-      "name": "Mordoror",
+      "name": "Питер",
       "area": 100.0,
       "population": 1000,
       "populationDensity": 10,
@@ -21,8 +20,57 @@
     "attackLevel": 5.0,
     "defenseLevel": 5.0,
     "ring": {
-      "id": 1,
-      "name": "Ring1",
+      "name": "Коfльцо",
+      "power": 10
+    }
+  },
+  {
+    "name": "Пепсик",
+    "coordinates": {
+      "x": 200,
+      "y": 200
+    },
+    "creationDate": "2023-10-01T12:00:00Z",
+    "age": 7,
+    "creatureType": "HOBBIT",
+    "creatureLocation": {
+      "name": "Питер",
+      "area": 100.0,
+      "population": 1000,
+      "populationDensity": 10,
+      "governor": "GOLLUM",
+      "capital": true,
+      "establishmentDate": "2023-10-01T12:00:00Z"
+    },
+    "attackLevel": 5.0,
+    "defenseLevel": 5.0,
+    "ring": {
+      "name": "Коfльцо",
+      "power": 10
+    }
+  },
+  {
+    "name": "Хити",
+    "coordinates": {
+      "x": 200,
+      "y": 200
+    },
+    "creationDate": "2023-10-01T12:00:00Z",
+    "age": 5,
+    "creatureType": "HOBBIT",
+    "creatureLocation": {
+      "name": "Питер",
+      "area": 100.0,
+      "population": 1000,
+      "populationDensity": 10,
+      "governor": "GOLLUM",
+      "capital": true,
+      "establishmentDate": "2023-10-01T12:00:00Z"
+    },
+    "attackLevel": 5.0,
+    "defenseLevel": 5.0,
+    "ring": {
+      "name": "Коfльцо",
       "power": 10
     }
   }

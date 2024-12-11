@@ -406,12 +406,35 @@
             <h:commandButton value="Добавить объект" action="addBookCreature?faces-redirect=true" styleClass="back-button" rendered="#{bookCreatureBean.isUserLoggedIn()}"/>
             <h:commandButton value="Специальные операции" action="special_operations?faces-redirect=true" styleClass="back-button" rendered="#{bookCreatureBean.isUserLoggedIn()}"/>
         </h:form>
-        <h:form enctype="multipart/form-data">
+        <h:form enctype="multipart/form-data" rendered="#{bookCreatureBean.isUserLoggedIn()}">
             <h:outputLabel for="file" value="Выберите файл для импорта:" />
-            <h:inputFile id="file" value="#{bookCreatureBean.uploadedFile}" />
-            <h:commandButton value="Импортировать" action="#{bookCreatureBean.importBookCreatures}" styleClass="import-button" rendered="#{bookCreatureBean.isUserLoggedIn()}" />
+            <h:inputFile id="file" value="#{fileImportBean.uploadedFile}" />
+            <h:commandButton value="Импортировать" action="#{fileImportBean.importBookCreatures}" styleClass="import-button" rendered="#{bookCreatureBean.isUserLoggedIn()}" />
             <h:messages />
         </h:form>
+       <h:form>
+            <h:commandButton value="История импорта" onclick="openImportHistoryModal(); return false;" styleClass="import-button" rendered="#{bookCreatureBean.isUserLoggedIn()}" />
+       </h:form>
+        <script>
+            function openImportHistoryModal() {
+                document.getElementById('importHistoryModal').style.display = 'block';
+            }
+
+            function closeImportHistoryModal() {
+                document.getElementById('importHistoryModal').style.display = 'none';
+            }
+
+            // Закрытие модального окна при клике вне его
+            window.onclick = function(event) {
+                var modal = document.getElementById('importHistoryModal');
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            }
+        </script>
+
+
+
 
         <h:form rendered="#{bookCreatureBean.isUserLoggedIn()}">
             <div style="text-align: center; margin-top: 20px;">
@@ -477,6 +500,39 @@
 
         </div>
     </div>
+    <div id="importHistoryModal" class="modal">
+        <h:form id="importTable">
+
+            <div class="modal-content">
+            <span class="close" onclick="closeImportHistoryModal()">×</span>
+            <h2>История импорта</h2>
+            <h:dataTable value="#{importHistoryBean.importHistory}" var="history">
+            <h:column>
+            <f:facet name="header">ID операции</f:facet>
+            #{history.id}
+            </h:column>
+            <h:column>
+            <f:facet name="header">Статус</f:facet>
+            #{history.status}
+            </h:column>
+            <h:column>
+            <f:facet name="header">Пользователь</f:facet>
+            #{history.user.username}
+            </h:column>
+            <h:column>
+            <f:facet name="header">Число добавленных объектов</f:facet>
+            #{history.addedObjects}
+            </h:column>
+            <h:column>
+            <f:facet name="header">Дата</f:facet>
+            #{history.timestamp}
+            </h:column>
+            </h:dataTable>
+            </div>
+            <p:poll interval="2" update="importTable" />
+        </h:form>
+    </div>
+
 
 </h:body>
 </html>

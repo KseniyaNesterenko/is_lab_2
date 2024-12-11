@@ -12,6 +12,7 @@
         <class>cs.ifmo.is.lab1.model.User</class>
         <class>cs.ifmo.is.lab1.model.AdminRequest</class>
         <class>cs.ifmo.is.lab1.model.BookCreatureHistory</class>
+        <class>cs.ifmo.is.lab1.model.ImportHistory</class>
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
         <properties>
             <property name="jakarta.persistence.jdbc.driver" value="org.postgresql.Driver"/>

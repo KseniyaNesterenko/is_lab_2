@@ -510,24 +510,4 @@ public class BookCreatureRepository {
         }
     }
 
-    public void saveAll(List<BookCreature> bookCreatures) {
-        EntityManager em = emf.createEntityManager();
-        try {
-            em.getTransaction().begin();
-
-            for (BookCreature bookCreature : bookCreatures) {
-                em.persist(bookCreature);
-            }
-
-            em.getTransaction().commit();
-        } catch (Exception e) {
-            if (em.getTransaction().isActive()) {
-                em.getTransaction().rollback();
-            }
-            throw e;
-        } finally {
-            em.close();
-        }
-    }
-
 }
