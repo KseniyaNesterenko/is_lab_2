@@ -8,10 +8,7 @@ import cs.ifmo.is.lab1.repository.RingRepository;
 import jakarta.ejb.Stateless;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
-import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.*;
 import jakarta.transaction.Transactional;
 
 import java.io.Serializable;
@@ -22,6 +19,9 @@ import java.util.List;
 public class BookCreatureService implements Serializable {
     public BookCreatureService() {
     }
+
+    @PersistenceUnit(unitName = "IsLab1")
+    private EntityManagerFactory emf;
 
     @Inject
     private BookCreatureRepository bookCreatureRepository;
@@ -206,6 +206,28 @@ public class BookCreatureService implements Serializable {
         create(defaultBookCreature);
     }
 
+    @Transactional
+    public void importBookCreatures(List<BookCreature> bookCreatures) {
+        EntityManager em = emf.createEntityManager();
+        try {
+            em.getTransaction().begin();
+
+            for (BookCreature bookCreature : bookCreatures) {
+                validateBookCreature(bookCreature);
+                em.persist(bookCreature);
+            }
+
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            throw new RuntimeException("Ошибка при импорте: " + e.getMessage(), e);
+        } finally {
+            em.close();
+        }
+    }
+
 
     private void validateBookCreature(BookCreature bookCreature) {
         if (bookCreature.getName() == null || bookCreature.getName().isEmpty()) {
@@ -269,5 +291,7 @@ public class BookCreatureService implements Serializable {
             throw new IllegalArgumentException("Сила кольца обязательна к заполнению и должна быть положительным числом.");
         }
     }
+
+
 
 }
