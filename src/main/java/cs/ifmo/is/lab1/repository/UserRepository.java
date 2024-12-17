@@ -3,12 +3,14 @@ package cs.ifmo.is.lab1.repository;
 import cs.ifmo.is.lab1.model.AdminRequest;
 import cs.ifmo.is.lab1.model.MagicCity;
 import cs.ifmo.is.lab1.model.User;
+import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 
 import java.util.List;
 
+@Stateless
 public class UserRepository {
     private EntityManagerFactory entityManagerFactory;
     private EntityManager entityManager;

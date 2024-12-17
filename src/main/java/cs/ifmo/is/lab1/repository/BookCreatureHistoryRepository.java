@@ -1,6 +1,7 @@
 package cs.ifmo.is.lab1.repository;
 
 import cs.ifmo.is.lab1.model.BookCreatureHistory;
+import jakarta.ejb.Stateless;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -10,7 +11,7 @@ import jakarta.transaction.Transactional;
 
 import java.util.List;
 
-@ApplicationScoped
+@Stateless
 public class BookCreatureHistoryRepository {
 
     private EntityManagerFactory emf = Persistence.createEntityManagerFactory("IsLab1");

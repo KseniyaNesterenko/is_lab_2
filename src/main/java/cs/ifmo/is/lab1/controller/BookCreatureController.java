@@ -5,9 +5,9 @@ import cs.ifmo.is.lab1.model.BookCreature;
 import cs.ifmo.is.lab1.model.BookCreatureType;
 import cs.ifmo.is.lab1.service.BookCreatureService;
 import jakarta.inject.Inject;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,9 +19,14 @@ public class BookCreatureController {
     @Inject
     private BookCreatureService bookCreatureService;
 
+    public BookCreatureController() {
+        System.out.println("BookCreatureController is initialized");
+    }
+
     @POST
     public Response create(BookCreature bookCreature) {
         bookCreatureService.create(bookCreature);
+        System.out.println("CREATE request");
         return Response.status(Response.Status.CREATED).build();
     }
 
@@ -66,6 +71,7 @@ public class BookCreatureController {
                             @QueryParam("filterRing") String filterRing,
                             @QueryParam("sortField") String sortField,
                             @QueryParam("sortAscending") @DefaultValue("true") boolean sortAscending) {
+        System.out.println("GET request to findAll");
         List<BookCreatureType> matchingCreatureTypes = getMatchingCreatureTypes(filterCreatureType);
         List<BookCreature> bookCreatures = bookCreatureService.findAll(page, pageSize, filterId, filterName, filterAge, filterCoordinatesX, filterCoordinatesY, filterCreationDate, matchingCreatureTypes, filterCreatureLocation, filterAttackLevel, filterDefenseLevel, filterRing, sortField, sortAscending);
         long total = bookCreatureService.count(filterId, filterName, filterAge, filterCoordinatesX, filterCoordinatesY, filterCreationDate, matchingCreatureTypes, filterCreatureLocation, filterAttackLevel, filterDefenseLevel, filterRing);
@@ -84,4 +90,11 @@ public class BookCreatureController {
         }
         return matchingTypes;
     }
+
+    @GET
+    @Path("/test")
+    public Response test() {
+        return Response.ok("Controller is working!").build();
+    }
+
 }

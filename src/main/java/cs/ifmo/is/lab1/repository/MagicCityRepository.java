@@ -1,6 +1,7 @@
 package cs.ifmo.is.lab1.repository;
 
 import cs.ifmo.is.lab1.model.*;
+import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -10,6 +11,7 @@ import jakarta.persistence.TypedQuery;
 import java.util.Date;
 import java.util.List;
 
+@Stateless
 public class MagicCityRepository {
 
     private EntityManagerFactory emf = Persistence.createEntityManagerFactory("IsLab1");

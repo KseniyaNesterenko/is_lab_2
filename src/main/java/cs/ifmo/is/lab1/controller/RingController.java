@@ -6,9 +6,9 @@ import cs.ifmo.is.lab1.model.Ring;
 import cs.ifmo.is.lab1.service.MagicCityService;
 import cs.ifmo.is.lab1.service.RingService;
 import jakarta.inject.Inject;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.util.Date;
 import java.util.List;
 

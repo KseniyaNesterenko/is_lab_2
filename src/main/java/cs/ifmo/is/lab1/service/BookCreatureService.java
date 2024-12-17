@@ -6,6 +6,7 @@ import cs.ifmo.is.lab1.repository.BookCreatureRepository;
 import cs.ifmo.is.lab1.repository.MagicCityRepository;
 import cs.ifmo.is.lab1.repository.RingRepository;
 import jakarta.ejb.Stateless;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -17,10 +18,10 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
-@Stateless
+@ApplicationScoped
 public class BookCreatureService implements Serializable {
-
-    private EntityManagerFactory emf = Persistence.createEntityManagerFactory("IsLab1");
+    public BookCreatureService() {
+    }
 
     @Inject
     private BookCreatureRepository bookCreatureRepository;
@@ -203,29 +204,6 @@ public class BookCreatureService implements Serializable {
         defaultBookCreature.setUser(currentUser);
 
         create(defaultBookCreature);
-    }
-
-
-    @Transactional
-    public void importBookCreatures(List<BookCreature> bookCreatures) {
-        EntityManager em = emf.createEntityManager();
-        try {
-            em.getTransaction().begin();
-
-            for (BookCreature bookCreature : bookCreatures) {
-                validateBookCreature(bookCreature);
-                em.persist(bookCreature);
-            }
-
-            em.getTransaction().commit();
-        } catch (Exception e) {
-            if (em.getTransaction().isActive()) {
-                em.getTransaction().rollback();
-            }
-            throw new RuntimeException("Ошибка при импорте: " + e.getMessage(), e);
-        } finally {
-            em.close();
-        }
     }
 
 

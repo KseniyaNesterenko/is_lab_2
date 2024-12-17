@@ -1,15 +1,18 @@
 package cs.ifmo.is.lab1.repository;
 
 import cs.ifmo.is.lab1.model.*;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.*;
 
 import java.util.Date;
 import java.util.List;
 
+@ApplicationScoped
 public class BookCreatureRepository {
 
-    private EntityManagerFactory emf = Persistence.createEntityManagerFactory("IsLab1");
+    @PersistenceUnit(unitName = "IsLab1")
+    private EntityManagerFactory emf;
     @Inject
     private BookCreatureHistoryRepository bookCreatureHistoryRepository;
 
