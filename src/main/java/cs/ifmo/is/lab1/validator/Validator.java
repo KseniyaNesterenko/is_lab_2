@@ -107,7 +107,7 @@ public class Validator {
         }
 
         if (bookCreature.getAge() == null || !(bookCreature.getAge() instanceof Long) || (bookCreature.getAge() < 0)) {
-            addErrorMessage("age", "Age обязательно к заполнению");
+            addErrorMessage("age", "Age обязательно к заполнению и должно быть > 0");
             isValid = false;
         }
 

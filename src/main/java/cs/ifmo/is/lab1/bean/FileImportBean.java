@@ -44,12 +44,28 @@ public class FileImportBean implements Serializable {
             int addedObjects = 0;
             try (InputStream inputStream = uploadedFile.getInputStream()) {
                 List<BookCreature> bookCreatures = parseFile(inputStream);
+
+                // Проверяем дубликаты в самом файле
                 checkForDuplicatesInFile(bookCreatures);
+
+                // Проверяем дубликаты в базе данных
+                List<String> duplicateNamesInDb = checkForDuplicatesInDatabase(bookCreatures);
+
+                if (!duplicateNamesInDb.isEmpty()) {
+                    FacesContext.getCurrentInstance().addMessage(null,
+                            new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                                    "Ошибка: Следующие имена уже существуют в базе данных: " + String.join(", ", duplicateNamesInDb),
+                                    null));
+                    importHistoryService.saveImportHistory(currentUser, "Неуспешно", addedObjects);
+                    return;
+                }
 
                 for (BookCreature bookCreature : bookCreatures) {
                     if (!validateBookCreature(bookCreature)) {
                         FacesContext.getCurrentInstance().addMessage(null,
-                                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Ошибка: Один или несколько объектов содержат некорректные данные. Импорт отменен.", null));
+                                new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                                        "Ошибка: Один или несколько объектов содержат некорректные данные. Импорт отменен.",
+                                        null));
                         importHistoryService.saveImportHistory(currentUser, "Неуспешно", addedObjects);
                         return;
                     }
@@ -64,37 +80,33 @@ public class FileImportBean implements Serializable {
                 importHistoryService.saveImportHistory(currentUser, status, addedObjects);
 
             } catch (IllegalArgumentException e) {
-                FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Ошибка валидации: " + e.getMessage(), null));
+                FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                        "Ошибка валидации: " + e.getMessage(), null));
                 importHistoryService.saveImportHistory(currentUser, "Неуспешно", addedObjects);
             } catch (IOException e) {
-                FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Ошибка при чтении файла.", null));
-                importHistoryService.saveImportHistory(currentUser, "Неуспешно", addedObjects);
-            } catch (jakarta.ejb.EJBException e) {
-                Throwable cause = e.getCause();
-                while (cause != null) {
-                    if (cause instanceof org.eclipse.persistence.exceptions.DatabaseException) {
-                        Throwable internalException = ((org.eclipse.persistence.exceptions.DatabaseException) cause).getInternalException();
-                        if (internalException instanceof org.postgresql.util.PSQLException
-                                && internalException.getMessage().contains("duplicate key value violates unique constraint")) {
-                            String constraintDetails = internalException.getMessage();
-                            String duplicateValue = extractDuplicateValue(constraintDetails);
-                            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Ошибка: объект с именем \"" + duplicateValue + "\" уже существует в базе данных.", null));
-                            importHistoryService.saveImportHistory(currentUser, "Неуспешно", addedObjects);
-                            return;
-                        }
-                    }
-                    cause = cause.getCause();
-                }
-                FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Ошибка при импорте данных!", null));
+                FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                        "Ошибка при чтении файла.", null));
                 importHistoryService.saveImportHistory(currentUser, "Неуспешно", addedObjects);
             } catch (Exception e) {
                 e.printStackTrace();
-                FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Ошибка при импорте данных!", null));
+                FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                        "Ошибка при импорте данных!", null));
                 importHistoryService.saveImportHistory(currentUser, "Неуспешно", addedObjects);
             }
         } else {
-            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Пожалуйста, выберите файл для импорта.", null));
+            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                    "Пожалуйста, выберите файл для импорта.", null));
         }
+    }
+
+    private List<String> checkForDuplicatesInDatabase(List<BookCreature> bookCreatures) {
+        List<String> duplicateNames = new ArrayList<>();
+        for (BookCreature bookCreature : bookCreatures) {
+            if (bookCreatureService.isNameExists(bookCreature.getName())) {
+                duplicateNames.add(bookCreature.getName());
+            }
+        }
+        return duplicateNames;
     }
 
     private String extractDuplicateValue(String message) {
@@ -201,7 +213,7 @@ public class FileImportBean implements Serializable {
         }
 
         if (bookCreature.getAge() == null || !(bookCreature.getAge() instanceof Long) || (bookCreature.getAge() < 0)) {
-            FacesContext.getCurrentInstance().addMessage("age", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Age обязательно к заполнению", "Age обязательно к заполнению"));
+            FacesContext.getCurrentInstance().addMessage("age", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Age обязательно к заполнению и должно быть > 0", "Age обязательно к заполнению и должно быть > 0"));
             isValid = false;
         }
 

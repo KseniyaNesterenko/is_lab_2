@@ -20,7 +20,7 @@ public class UserService implements Serializable {
     public UserService() {
         userRepository = new UserRepository();
         initializeAdmin();
-        initializeUser();
+//        initializeUser();
     }
 
     public void registerUser(User user) {
@@ -107,6 +107,8 @@ public class UserService implements Serializable {
     private void initializeAdmin() {
         if (userRepository.findUserByUsername("a") == null) {
             createInitialAdmin("a", "a");
+            createInitialUser("u", "u");
+            createInitialUser("t", "t");
         }
     }
 

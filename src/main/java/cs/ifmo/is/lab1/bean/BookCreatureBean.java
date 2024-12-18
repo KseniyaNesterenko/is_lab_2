@@ -91,28 +91,40 @@ public class BookCreatureBean implements Serializable {
         List<BookCreature> existingCreatures = bookCreatureService.findByUserId(currentUser.getId());
         if (existingCreatures.isEmpty()) {
             for (int i = 0; i < 3; i++) {
-                BookCreature defaultBookCreature = new BookCreature();
-                defaultBookCreature.setName("Example " + (i + 1));
-                defaultBookCreature.setCoordinates(new Coordinates(60+i*20, 60+i*20));
-                defaultBookCreature.setCreationDate(new Date());
-                defaultBookCreature.setAge(2L);
-                defaultBookCreature.setCreatureType(BookCreatureType.HOBBIT);
-                defaultBookCreature.setCreatureLocation(new MagicCity("TEST", 100.0, 1000, new Date(), MagicCity.GovernorType.HOBBIT, true, 10, currentUser));
-                defaultBookCreature.setAttackLevel(5F);
-                defaultBookCreature.setDefenseLevel(5F);
-                defaultBookCreature.setRing(new Ring("Example Ring " + (i + 1), 10, currentUser));
-                defaultBookCreature.setUser(currentUser);
+                String creatureName = "Example " + (i + 1);
+                if (!bookCreatureService.isNameExists(creatureName)) {
+                    BookCreature defaultBookCreature = new BookCreature();
+                    defaultBookCreature.setName(creatureName);
+                    defaultBookCreature.setCoordinates(new Coordinates(60 + i * 20, 60 + i * 20));
+                    defaultBookCreature.setCreationDate(new Date());
+                    defaultBookCreature.setAge(2L);
+                    defaultBookCreature.setCreatureType(BookCreatureType.HOBBIT);
+                    defaultBookCreature.setCreatureLocation(new MagicCity("TEST", 100.0, 1000, new Date(), MagicCity.GovernorType.HOBBIT, true, 10, currentUser));
+                    defaultBookCreature.setAttackLevel(5F);
+                    defaultBookCreature.setDefenseLevel(5F);
+                    defaultBookCreature.setRing(new Ring("Example Ring " + (i + 1), 10, currentUser));
+                    defaultBookCreature.setUser(currentUser);
 
-                bookCreatureService.create(defaultBookCreature);
+                    bookCreatureService.create(defaultBookCreature);
+                }
             }
-            MagicCity magicCity = new MagicCity("Mordor", 100.0, 1000, new Date(), MagicCity.GovernorType.HOBBIT, true, 10, currentUser);
-            bookCreatureService.create(magicCity);
 
+            if (!bookCreatureService.isNameExists("Mordor")) {
+                MagicCity magicCity = new MagicCity("Mordor", 100.0, 1000, new Date(), MagicCity.GovernorType.HOBBIT, true, 10, currentUser);
+                bookCreatureService.create(magicCity);
+            }
         }
     }
 
+
     public String addToDatabase() {
         if (validateAllFields()) {
+            if (bookCreatureService.isNameExists(this.bookCreature.getName())) {
+                FacesContext.getCurrentInstance().addMessage(null,
+                        new FacesMessage(FacesMessage.SEVERITY_ERROR, "Объект с таким именем уже существует.", null));
+                return null;
+            }
+
             BookCreature newBookCreature = new BookCreature();
             newBookCreature.setName(this.bookCreature.getName());
             newBookCreature.setCoordinates(new Coordinates(this.bookCreature.getCoordinates().getX(), this.bookCreature.getCoordinates().getY()));
@@ -134,7 +146,8 @@ public class BookCreatureBean implements Serializable {
 
             return "index?faces-redirect=true";
         } else {
-            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Please correct the errors in the form.", "Please correct the errors in the form."));
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Please correct the errors in the form.", null));
             return null;
         }
     }
@@ -161,6 +174,12 @@ public class BookCreatureBean implements Serializable {
 
     public String addToDatabaseShort() {
         if (validateAllFieldsShort()) {
+            if (bookCreatureService.isNameExists(this.bookCreature.getName())) {
+                FacesContext.getCurrentInstance().addMessage(null,
+                        new FacesMessage(FacesMessage.SEVERITY_ERROR, "Объект с таким именем уже существует.", null));
+                return null;
+            }
+
             BookCreature bookCreature = new BookCreature();
             bookCreature.setName(this.bookCreature.getName());
             bookCreature.setCoordinates(new Coordinates(this.bookCreature.getCoordinates().getX(), this.bookCreature.getCoordinates().getY()));
@@ -168,12 +187,12 @@ public class BookCreatureBean implements Serializable {
             bookCreature.setAge(this.bookCreature.getAge());
             bookCreature.setCreatureType(this.bookCreature.getCreatureType());
 
-
             MagicCity magicCity = bookCreatureService.findMagicCityById(this.magicCityId);
             if (magicCity != null) {
                 bookCreature.setCreatureLocation(magicCity);
             } else {
-                FacesContext.getCurrentInstance().addMessage("magicCityId", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Magic City ID is required and must exist", "Magic City ID is required and must exist"));
+                FacesContext.getCurrentInstance().addMessage("magicCityId",
+                        new FacesMessage(FacesMessage.SEVERITY_ERROR, "Magic City ID is required and must exist", null));
                 return null;
             }
 
@@ -184,7 +203,8 @@ public class BookCreatureBean implements Serializable {
             if (ring != null) {
                 bookCreature.setRing(ring);
             } else {
-                FacesContext.getCurrentInstance().addMessage("ringId", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Ring ID is required and must exist", "Ring ID is required and must exist"));
+                FacesContext.getCurrentInstance().addMessage("ringId",
+                        new FacesMessage(FacesMessage.SEVERITY_ERROR, "Ring ID is required and must exist", null));
                 return null;
             }
 
@@ -195,7 +215,8 @@ public class BookCreatureBean implements Serializable {
             loadPaginatedBookCreatures();
             return "index?faces-redirect=true";
         } else {
-            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Please correct the errors in the form.", "Please correct the errors in the form."));
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Please correct the errors in the form.", null));
             return null;
         }
     }
@@ -304,12 +325,17 @@ public class BookCreatureBean implements Serializable {
 
     public String update() {
         if (validateAllFields()) {
+            if (bookCreatureService.isNameExists(bookCreature.getName())
+                    && !bookCreatureService.findById(bookCreature.getId()).getName().equals(bookCreature.getName())) {
+                FacesContext.getCurrentInstance().addMessage(null,
+                        new FacesMessage(FacesMessage.SEVERITY_ERROR, "Объект с таким именем уже существует.", null));
+                return null;
+            }
+
             try {
                 User currentUser = (User) FacesContext.getCurrentInstance().getExternalContext().getSessionMap().get("user");
 
-                // Проверяем, что текущий пользователь имеет право редактировать объект
                 if (bookCreature.getUser().getId().equals(currentUser.getId()) || currentUser.getRole() == User.Role.ADMIN) {
-                    // Не изменяем поле user, если оно уже установлено
                     if (bookCreature.getUser() == null) {
                         bookCreature.setUser(currentUser);
                     }
@@ -329,18 +355,19 @@ public class BookCreatureBean implements Serializable {
                     loadPaginatedBookCreatures();
                     return "index?faces-redirect=true";
                 } else {
-                    FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Это не ваш объект, вы не можете его редактировать", "Это не ваш объект, вы не можете его редактировать"));
+                    FacesContext.getCurrentInstance().addMessage(null,
+                            new FacesMessage(FacesMessage.SEVERITY_ERROR, "Это не ваш объект, вы не можете его редактировать", null));
                     return null;
                 }
             } catch (Exception e) {
                 throw e;
             }
         } else {
-            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Please correct the errors in the form.", "Please correct the errors in the form."));
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Please correct the errors in the form.", null));
             return null;
         }
     }
-
 
 
 
@@ -565,7 +592,7 @@ public class BookCreatureBean implements Serializable {
         }
 
         if (bookCreature.getAge() == null || !(bookCreature.getAge() instanceof Long) || (bookCreature.getAge() < 0)) {
-            FacesContext.getCurrentInstance().addMessage("age", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Age обязательно к заполнению", "Age обязательно к заполнению"));
+            FacesContext.getCurrentInstance().addMessage("age", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Age обязательно к заполнению и должно быть > 0", "Age обязательно к заполнению и должно быть > 0"));
             isValid = false;
         }
 
@@ -645,7 +672,7 @@ public class BookCreatureBean implements Serializable {
         }
 
         if (bookCreature.getAge() == null || !(bookCreature.getAge() instanceof Long) || (bookCreature.getAge() < 0)) {
-            FacesContext.getCurrentInstance().addMessage("age", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Age обязательно к заполнению", "Age обязательно к заполнению"));
+            FacesContext.getCurrentInstance().addMessage("age", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Age обязательно к заполнению и должно быть > 0", "Age обязательно к заполнению и должно быть > 0"));
             isValid = false;
         }
 

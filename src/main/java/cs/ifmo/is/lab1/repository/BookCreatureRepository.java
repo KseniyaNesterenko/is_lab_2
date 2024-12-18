@@ -4,7 +4,7 @@ import cs.ifmo.is.lab1.model.*;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.*;
-
+import jakarta.transaction.Transactional;
 import java.util.Date;
 import java.util.List;
 
@@ -38,14 +38,27 @@ public class BookCreatureRepository {
         bookCreatureHistoryRepository.persist(history);
     }
 
+    @Transactional
     public void create(BookCreature bookCreature) {
         EntityManager em = emf.createEntityManager();
         try {
             em.getTransaction().begin();
+
+            boolean exists = !em.createQuery(
+                            "SELECT bc FROM BookCreature bc WHERE bc.name = :name", BookCreature.class)
+                    .setParameter("name", bookCreature.getName())
+                    .setLockMode(LockModeType.PESSIMISTIC_WRITE)
+                    .setMaxResults(1)
+                    .getResultList()
+                    .isEmpty();
+
+            if (exists) {
+                em.getTransaction().rollback();
+                throw new EntityExistsException("Существо с таким именем уже существует");
+            }
+
             em.persist(bookCreature);
             em.getTransaction().commit();
-            System.out.println("BookCreature ID: " + bookCreature.getId());
-            saveAuditLog(bookCreature, BookCreatureHistory.ChangeType.CREATE);
         } catch (Exception e) {
             if (em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
@@ -55,6 +68,7 @@ public class BookCreatureRepository {
             em.close();
         }
     }
+
 
 
     public void createShort(BookCreature bookCreature) {
@@ -104,14 +118,30 @@ public class BookCreatureRepository {
     }
 
 
-
+    @Transactional
     public void update(BookCreature bookCreature) {
         EntityManager em = emf.createEntityManager();
         try {
             em.getTransaction().begin();
-            em.merge(bookCreature);
+
+            // Блокируем объект для обновления
+            BookCreature existingCreature = em.find(BookCreature.class, bookCreature.getId(), LockModeType.PESSIMISTIC_WRITE);
+
+            if (existingCreature == null) {
+                throw new EntityNotFoundException("Существо с ID " + bookCreature.getId() + " не найдено");
+            }
+
+            // Обновляем данные существа
+            if (!em.contains(bookCreature)) {
+                bookCreature = em.merge(bookCreature);
+            }
+
             em.getTransaction().commit();
-            saveAuditLog(bookCreature, BookCreatureHistory.ChangeType.UPDATE);
+        } catch (PessimisticLockException e) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            throw new PersistenceException("Объект уже заблокирован другим пользователем", e);
         } catch (Exception e) {
             if (em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
@@ -121,6 +151,8 @@ public class BookCreatureRepository {
             em.close();
         }
     }
+
+
 
     public void update(MagicCity magicCity) {
         EntityManager em = emf.createEntityManager();
@@ -144,13 +176,15 @@ public class BookCreatureRepository {
         EntityManager em = emf.createEntityManager();
         try {
             em.getTransaction().begin();
+
             BookCreature bookCreature = em.find(BookCreature.class, id);
-            if (bookCreature != null) {
-                em.remove(bookCreature);
+            if (bookCreature == null) {
+                throw new EntityNotFoundException("Entity not found for ID: " + id);
             }
-            em.getTransaction().commit();
-            assert bookCreature != null;
+            em.remove(bookCreature);
             saveAuditLog(bookCreature, BookCreatureHistory.ChangeType.DELETE);
+
+            em.getTransaction().commit();
         } catch (Exception e) {
             if (em.getTransaction().isActive()) {
                 em.getTransaction().rollback();

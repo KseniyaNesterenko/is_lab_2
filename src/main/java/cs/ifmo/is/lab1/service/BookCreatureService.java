@@ -35,9 +35,21 @@ public class BookCreatureService implements Serializable {
     private RingRepository ringRepository;
 
 
+//    @Transactional
+//    public void create(BookCreature bookCreature) {
+//        if (isNameExists(bookCreature.getName())) {
+//            System.out.println("Существо с таким именем уже существует");
+//            return;
+//        }
+//        bookCreatureRepository.create(bookCreature);
+//    }
+
+    @Transactional
     public void create(BookCreature bookCreature) {
         bookCreatureRepository.create(bookCreature);
     }
+
+
 
     public void create(MagicCity magicCity) {
         magicCityRepository.create(magicCity);
@@ -59,16 +71,39 @@ public class BookCreatureService implements Serializable {
     }
 
 
+    @Transactional
     public void update(BookCreature bookCreature) {
-        bookCreatureRepository.update(bookCreature);
+        try {
+            bookCreatureRepository.update(bookCreature);
+        } catch (EntityExistsException e) {
+            System.out.println("Обновление не удалось: " + e.getMessage());
+            throw e;
+        } catch (EntityNotFoundException e) {
+            System.out.println("Обновление не удалось: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            System.out.println("Обновление не удалось: " + e.getMessage());
+            throw new RuntimeException("Ошибка обновления: " + e.getMessage(), e);
+        }
     }
+
+
 
     public void update(MagicCity magicCity) {
         bookCreatureRepository.update(magicCity);
     }
 
+
     public void delete(Integer id) {
-        bookCreatureRepository.delete(id);
+        try {
+            bookCreatureRepository.delete(id);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("ID must not be null or invalid.", e);
+        } catch (EntityNotFoundException e) {
+            throw new EntityNotFoundException("BookCreature with ID " + id + " not found.");
+        } catch (Exception e) {
+            throw new RuntimeException("An unexpected error occurred during deletion.", e);
+        }
     }
 
     public List<BookCreature> findAll(int page, int pageSize, Integer filterId, String filterName, Long filterAge, String filterCoordinatesX, String filterCoordinatesY, String filterCreationDate, List<BookCreatureType> filterCreatureTypes, String filterCreatureLocation, String filterAttackLevel, String filterDefenseLevel, String filterRing, String sortField, boolean sortAscending) {
@@ -291,6 +326,32 @@ public class BookCreatureService implements Serializable {
             throw new IllegalArgumentException("Сила кольца обязательна к заполнению и должна быть положительным числом.");
         }
     }
+
+    public boolean isNameExists(String name) {
+        EntityManager em = emf.createEntityManager();
+        try {
+            em.getTransaction().begin();
+
+            List<BookCreature> results = em.createQuery(
+                            "SELECT bc FROM BookCreature bc WHERE bc.name = :name", BookCreature.class
+                    )
+                    .setParameter("name", name)
+                    .setLockMode(LockModeType.PESSIMISTIC_WRITE) // Блокируем строку
+                    .setMaxResults(1) // Берём только одну строку
+                    .getResultList();
+
+            em.getTransaction().commit();
+            return !results.isEmpty();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
+
 
 
 

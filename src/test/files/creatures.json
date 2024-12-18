@@ -1,6 +1,6 @@
 [
   {
-    "name": "Вупак",
+    "name": "Афанасьев Д.Б.",
     "coordinates": {
       "x": 200,
       "y": 200
@@ -25,7 +25,7 @@
     }
   },
   {
-    "name": "Пепсик",
+    "name": "Дмитрий Борисович",
     "coordinates": {
       "x": 200,
       "y": 200
@@ -50,13 +50,13 @@
     }
   },
   {
-    "name": "Хити",
+    "name": "А.Д.Б.",
     "coordinates": {
       "x": 200,
       "y": 200
     },
     "creationDate": "2023-10-01T12:00:00Z",
-    "age": 5,
+    "age": -5,
     "creatureType": "HOBBIT",
     "creatureLocation": {
       "name": "Питер",
