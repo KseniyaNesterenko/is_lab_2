@@ -75,8 +75,8 @@ public class BookCreatureService implements Serializable {
     public void update(BookCreature bookCreature) {
         try {
             bookCreatureRepository.update(bookCreature);
-        } catch (EntityExistsException e) {
-            System.out.println("Обновление не удалось: " + e.getMessage());
+        } catch (PessimisticLockException e) {
+            System.out.println("Пессимистическая блокировка не удалась: " + e.getMessage());
             throw e;
         } catch (EntityNotFoundException e) {
             System.out.println("Обновление не удалось: " + e.getMessage());
@@ -89,6 +89,7 @@ public class BookCreatureService implements Serializable {
 
 
 
+
     public void update(MagicCity magicCity) {
         bookCreatureRepository.update(magicCity);
     }
@@ -98,9 +99,9 @@ public class BookCreatureService implements Serializable {
         try {
             bookCreatureRepository.delete(id);
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("ID must not be null or invalid.", e);
+            throw new IllegalArgumentException("Некорректный ID", e);
         } catch (EntityNotFoundException e) {
-            throw new EntityNotFoundException("BookCreature with ID " + id + " not found.");
+            throw new EntityNotFoundException("Существо не найдено в системе");
         } catch (Exception e) {
             throw new RuntimeException("An unexpected error occurred during deletion.", e);
         }
@@ -139,7 +140,7 @@ public class BookCreatureService implements Serializable {
     }
 
     public List<BookCreature> deleteByAttackLevel(Float attackLevel, Integer userId) {
-       return bookCreatureRepository.deleteByAttackLevel(attackLevel, userId);
+        return bookCreatureRepository.deleteByAttackLevel(attackLevel, userId);
     }
 
 
@@ -148,7 +149,7 @@ public class BookCreatureService implements Serializable {
     }
 
     public List<String> getUniqueRingNames() {
-       return bookCreatureRepository.getUniqueRingNames();
+        return bookCreatureRepository.getUniqueRingNames();
     }
 
     public void takeRingsFromHobbits(Integer userId) {
@@ -157,7 +158,7 @@ public class BookCreatureService implements Serializable {
 
 
     public void moveHobbitsWithRingsToMordor(Integer userId) {
-       bookCreatureRepository.moveHobbitsWithRingsToMordor(userId);
+        bookCreatureRepository.moveHobbitsWithRingsToMordor(userId);
     }
 
     public List<BookCreature> getHobbitsWithRingsInMordor() {

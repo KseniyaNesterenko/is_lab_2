@@ -117,31 +117,32 @@ public class BookCreatureRepository {
         }
     }
 
-
     @Transactional
     public void update(BookCreature bookCreature) {
         EntityManager em = emf.createEntityManager();
         try {
             em.getTransaction().begin();
 
-            // Блокируем объект для обновления
-            BookCreature existingCreature = em.find(BookCreature.class, bookCreature.getId(), LockModeType.PESSIMISTIC_WRITE);
+            // Применяем пессимистическую блокировку
+            BookCreature existingBookCreature = em.find(
+                    BookCreature.class,
+                    bookCreature.getId(),
+                    LockModeType.PESSIMISTIC_WRITE
+            );
 
-            if (existingCreature == null) {
+            if (existingBookCreature == null) {
                 throw new EntityNotFoundException("Существо с ID " + bookCreature.getId() + " не найдено");
             }
 
-            // Обновляем данные существа
-            if (!em.contains(bookCreature)) {
-                bookCreature = em.merge(bookCreature);
-            }
+            // Обновляем поля сущности
+            existingBookCreature.setName(bookCreature.getName());
+            existingBookCreature.setAge(bookCreature.getAge());
+            existingBookCreature.getCreatureLocation().setName(bookCreature.getCreatureLocation().getName());
+
+            // Обновляем объект в БД
+            em.merge(existingBookCreature);  // merge или update объекта, который уже заблокирован
 
             em.getTransaction().commit();
-        } catch (PessimisticLockException e) {
-            if (em.getTransaction().isActive()) {
-                em.getTransaction().rollback();
-            }
-            throw new PersistenceException("Объект уже заблокирован другим пользователем", e);
         } catch (Exception e) {
             if (em.getTransaction().isActive()) {
                 em.getTransaction().rollback();

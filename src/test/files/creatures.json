@@ -56,7 +56,7 @@
       "y": 200
     },
     "creationDate": "2023-10-01T12:00:00Z",
-    "age": -5,
+    "age": 5,
     "creatureType": "HOBBIT",
     "creatureLocation": {
       "name": "Питер",

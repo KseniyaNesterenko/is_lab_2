@@ -38,15 +38,15 @@ public class BookCreatureController {
         try {
             bookCreatureService.create(bookCreature);
             System.out.println("CREATE request");
-            return Response.status(Response.Status.CREATED).build(); // Возвращаем статус 201, если всё прошло успешно
+            return Response.status(Response.Status.CREATED).build();
         } catch (EntityExistsException e) {
             System.out.println("CREATE request failed: " + e.getMessage());
-            return Response.status(Response.Status.CONFLICT) // Возвращаем статус 409, если объект уже существует
+            return Response.status(Response.Status.CONFLICT)
                     .entity("Существо с таким именем уже существует")
                     .build();
         } catch (Exception e) {
             System.out.println("CREATE request failed: " + e.getMessage());
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR) // Возвращаем статус 500 для других ошибок
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity("Ошибка сервера: " + e.getMessage())
                     .build();
         }
@@ -90,19 +90,21 @@ public class BookCreatureController {
     }
 
 
+
     @DELETE
     @Path("/{id}")
     public Response delete(@PathParam("id") Integer id) {
         try {
             bookCreatureService.delete(id);
+            System.out.println("DELETE request");
             return Response.ok().build();
         } catch (IllegalArgumentException e) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Invalid ID: " + e.getMessage())
+                    .entity("Некорректный ID: " + e.getMessage())
                     .build();
         } catch (EntityNotFoundException e) {
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity("BookCreature with ID " + id + " not found.")
+                    .entity("Существо не найдено в системе")
                     .build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
@@ -152,5 +154,6 @@ public class BookCreatureController {
     public Response test() {
         return Response.ok("Controller is working!").build();
     }
+
 
 }
