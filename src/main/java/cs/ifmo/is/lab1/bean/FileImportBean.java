@@ -227,103 +227,84 @@ public class FileImportBean implements Serializable {
         return bookCreaturesFromFile;
     }
 
-    public boolean validateBookCreature(BookCreature bookCreature) {
+    private boolean validateBookCreature(BookCreature bookCreature) {
         boolean isValid = true;
 
-        // Проверка имени существа
         if (bookCreature.getName() == null || bookCreature.getName().trim().isEmpty()) {
             FacesContext.getCurrentInstance().addMessage("name", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Введите имя!", "Введите имя!"));
             isValid = false;
         }
 
-        // Проверка координат X
         Object x = bookCreature.getCoordinates().getX();
-        if (String.valueOf(x).trim().isEmpty() || !(x instanceof Integer) || (Integer) x >= 488) {
+        if (String.valueOf(bookCreature.getCoordinates().getX()) == null || bookCreature.getCoordinates().getX() >= 488 || !(x instanceof Integer)) {
             FacesContext.getCurrentInstance().addMessage("x", new FacesMessage(FacesMessage.SEVERITY_ERROR, "X обязательно к заполнению и должно быть меньше 488", "X обязательно к заполнению и должно быть меньше 488"));
             isValid = false;
         }
 
-        // Проверка координат Y
         Object y = bookCreature.getCoordinates().getY();
-        if (String.valueOf(y).trim().isEmpty() || !(y instanceof Integer)) {
+        if (String.valueOf(bookCreature.getCoordinates().getY()) == null || !(y instanceof Integer)) {
             FacesContext.getCurrentInstance().addMessage("y", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Y обязательно к заполнению", "Y обязательно к заполнению"));
             isValid = false;
         }
 
-        // Проверка возраста
-        Object age = bookCreature.getAge();
-        if (String.valueOf(age).trim().isEmpty() || !(age instanceof Long) || (Long) age < 0) {
+        if (bookCreature.getAge() == null || !(bookCreature.getAge() instanceof Long) || (bookCreature.getAge() < 0)) {
             FacesContext.getCurrentInstance().addMessage("age", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Age обязательно к заполнению и должно быть > 0", "Age обязательно к заполнению и должно быть > 0"));
             isValid = false;
         }
 
-        // Проверка типа существа
-        if (bookCreature.getCreatureType() == null || String.valueOf(bookCreature.getCreatureType()).trim().isEmpty()) {
+        if (bookCreature.getCreatureType() == null) {
             FacesContext.getCurrentInstance().addMessage("creatureType", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Creature Type обязательно к заполнению", "Creature Type обязательно к заполнению"));
             isValid = false;
         }
 
-        // Проверка имени локации существа
-        String locationName = bookCreature.getCreatureLocation().getName();
-        if (Objects.equals(locationName, "Mordor")) {
+        if (Objects.equals(bookCreature.getCreatureLocation().getName(), "Mordor")) {
             FacesContext.getCurrentInstance().addMessage("cityName", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Нельзя выбрать такое имя для города!", "Нельзя выбрать такое имя для города!"));
             isValid = false;
         }
-        if (locationName == null || locationName.trim().isEmpty()) {
+
+        if (bookCreature.getCreatureLocation().getName() == null || bookCreature.getCreatureLocation().getName().trim().isEmpty()) {
             FacesContext.getCurrentInstance().addMessage("cityName", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Magic City Введите имя!", "Magic City Введите имя!"));
             isValid = false;
         }
 
-        // Проверка площади локации
-        Object area = bookCreature.getCreatureLocation().getArea();
-        if (String.valueOf(area).trim().isEmpty() || !(area instanceof Integer) || (Integer) area <= 0) {
+        if (bookCreature.getCreatureLocation().getArea() == null || bookCreature.getCreatureLocation().getArea() <= 0) {
             FacesContext.getCurrentInstance().addMessage("cityArea", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Magic City Поле Area обязательно к заполнению и должно быть больше 0", "Magic City Поле Area обязательно к заполнению и должно быть больше 0"));
             isValid = false;
         }
 
-        // Проверка населения локации
-        Object population = bookCreature.getCreatureLocation().getPopulation();
-        if (String.valueOf(population).trim().isEmpty() || !(population instanceof Integer) || (Integer) population <= 0) {
+        Object p = bookCreature.getCreatureLocation().getPopulation();
+        if (bookCreature.getCreatureLocation().getPopulation() == null || bookCreature.getCreatureLocation().getPopulation() <= 0 || !(p instanceof Integer)) {
             FacesContext.getCurrentInstance().addMessage("cityPopulation", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Magic City Поле Population обязательно к заполнению и должно быть больше 0", "Magic City Поле Population обязательно к заполнению и должно быть больше 0"));
             isValid = false;
         }
 
-        // Проверка плотности населения
-        Object density = bookCreature.getCreatureLocation().getPopulationDensity();
-        if (String.valueOf(density).trim().isEmpty() || !(density instanceof Integer) || (Integer) density <= 0) {
+        Object d = bookCreature.getCreatureLocation().getPopulationDensity();
+        if (String.valueOf(bookCreature.getCreatureLocation().getPopulationDensity()) == null || bookCreature.getCreatureLocation().getPopulationDensity() <= 0 || !(d instanceof Integer)) {
             FacesContext.getCurrentInstance().addMessage("cityPopulationDensity", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Magic City Поле Population Density обязательно к заполнению и должно быть больше 0", "Magic City Поле Population Density обязательно к заполнению и должно быть больше 0"));
             isValid = false;
         }
 
-        // Проверка уровня атаки
-        Object attackLevel = bookCreature.getAttackLevel();
-        if (String.valueOf(attackLevel).trim().isEmpty() || !(attackLevel instanceof Integer) || (Integer) attackLevel <= 0) {
+        if (bookCreature.getAttackLevel() == null || bookCreature.getAttackLevel() <= 0) {
             FacesContext.getCurrentInstance().addMessage("attackLevel", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Attack Level обязательно к заполнению и больше 0", "Attack Level обязательно к заполнению и больше 0"));
             isValid = false;
         }
 
-        // Проверка уровня защиты
-        Object defenseLevel = bookCreature.getDefenseLevel();
-        if (String.valueOf(defenseLevel).trim().isEmpty() || !(defenseLevel instanceof Integer) || (Integer) defenseLevel <= 0) {
-            FacesContext.getCurrentInstance().addMessage("defenseLevel", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Defense Level обязательно к заполнению и больше 0", "Defense Level обязательно к заполнению и больше 0"));
+        if (bookCreature.getDefenseLevel() == null || bookCreature.getDefenseLevel() <= 0) {
+            FacesContext.getCurrentInstance().addMessage("defenseLevel", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Defense Level обязательно к заполнению и больше 0e", "Defense Level обязательно к заполнению и больше 0e"));
             isValid = false;
         }
 
-        // Проверка имени кольца
-        String ringName = bookCreature.getRing().getName();
-        if (ringName == null || ringName.trim().isEmpty()) {
+        if (bookCreature.getRing().getName() == null || bookCreature.getRing().getName().trim().isEmpty()) {
             FacesContext.getCurrentInstance().addMessage("ringName", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Ring Введите имя!", "Ring Введите имя!"));
             isValid = false;
         }
 
-        // Проверка силы кольца
-        Object ringPower = bookCreature.getRing().getPower();
-        if (String.valueOf(ringPower).trim().isEmpty() || !(ringPower instanceof Integer) || (Integer) ringPower <= 0) {
+        Object power = bookCreature.getRing().getPower();
+        if (bookCreature.getRing().getPower() == null || bookCreature.getRing().getPower() <= 0 || !(power instanceof Integer)) {
             FacesContext.getCurrentInstance().addMessage("ringPower", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Ring Power обязательно к заполнению и больше 0", "Ring Power обязательно к заполнению и больше 0"));
             isValid = false;
         }
 
         return isValid;
     }
-
 }
