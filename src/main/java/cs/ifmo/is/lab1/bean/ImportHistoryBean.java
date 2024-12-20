@@ -1,16 +1,19 @@
 package cs.ifmo.is.lab1.bean;
-import cs.ifmo.is.lab1.model.BookCreatureHistory;
+
 import cs.ifmo.is.lab1.model.ImportHistory;
 import cs.ifmo.is.lab1.model.User;
-import cs.ifmo.is.lab1.repository.BookCreatureHistoryRepository;
 import cs.ifmo.is.lab1.service.ImportHistoryService;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import org.primefaces.model.FilterMeta;
+import org.primefaces.model.LazyDataModel;
+import org.primefaces.model.SortMeta;
 
 import java.util.List;
+import java.util.Map;
 
 @Named
 @RequestScoped
@@ -19,24 +22,33 @@ public class ImportHistoryBean {
     @Inject
     private ImportHistoryService importHistoryService;
 
-    private List<ImportHistory> importHistory;
-
+    private LazyDataModel<ImportHistory> lazyImportHistory;
     private User currentUser;
     private boolean isAdmin;
 
     @PostConstruct
     public void init() {
-        // Получаем текущего пользователя из сессии
         currentUser = (User) FacesContext.getCurrentInstance().getExternalContext().getSessionMap().get("user");
-
-        // Проверяем роль пользователя
         isAdmin = currentUser != null && "ADMIN".equalsIgnoreCase(currentUser.getRole().toString());
-
-        // Загружаем историю импорта
-        importHistory = importHistoryService.getImportHistory(currentUser, isAdmin);
+        setupLazyModel();
     }
 
-    public List<ImportHistory> getImportHistory() {
-        return importHistory;
+    private void setupLazyModel() {
+        lazyImportHistory = new LazyDataModel<>() {
+            @Override
+            public List<ImportHistory> load(int first, int pageSize, Map<String, SortMeta> sortBy, Map<String, FilterMeta> filterBy) {
+                int page = first / pageSize + 1;
+                return importHistoryService.getImportHistoryPaginated(currentUser, isAdmin, page, pageSize);
+            }
+
+            @Override
+            public int count(Map<String, FilterMeta> filterBy) {
+                return importHistoryService.getTotalImportHistoryCount(currentUser, isAdmin);
+            }
+        };
+    }
+
+    public LazyDataModel<ImportHistory> getLazyImportHistory() {
+        return lazyImportHistory;
     }
 }

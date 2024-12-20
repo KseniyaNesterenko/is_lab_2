@@ -5,11 +5,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import cs.ifmo.is.lab1.model.*;
 import cs.ifmo.is.lab1.service.BookCreatureService;
 import cs.ifmo.is.lab1.service.ImportHistoryService;
+import cs.ifmo.is.lab1.service.UserService;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.enterprise.context.RequestScoped;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 
 import java.io.IOException;
@@ -38,17 +41,49 @@ public class FileImportBean implements Serializable {
         this.uploadedFile = uploadedFile;
     }
 
+
+
+    @Inject
+    private HttpServletRequest request;
+
+    @Inject
+    private UserService userService;
+
+    public User getCurrentUser() {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            User sessionUser = (User) session.getAttribute("user");
+            if (sessionUser != null) {
+                return sessionUser;
+            }
+        }
+
+        String username = request.getHeader("X-Username");
+        String password = request.getHeader("X-Password");
+
+        if (username != null && password != null) {
+            User user = userService.findUserByUsername(username);
+            if (user != null && user.getPassword().equals(password)) {
+                return user;
+            }
+        }
+
+        return null;
+    }
+
+
     public void importBookCreatures() {
+        System.out.println("Uploaded file size: " + uploadedFile.getSize());
+        System.out.println("Uploaded file content type: " + uploadedFile.getContentType());
+
         if (uploadedFile != null) {
-            User currentUser = (User) FacesContext.getCurrentInstance().getExternalContext().getSessionMap().get("user");
+            User currentUser = getCurrentUser();
             int addedObjects = 0;
             try (InputStream inputStream = uploadedFile.getInputStream()) {
                 List<BookCreature> bookCreatures = parseFile(inputStream);
 
-                // Проверяем дубликаты в самом файле
                 checkForDuplicatesInFile(bookCreatures);
 
-                // Проверяем дубликаты в базе данных
                 List<String> duplicateNamesInDb = checkForDuplicatesInDatabase(bookCreatures);
 
                 if (!duplicateNamesInDb.isEmpty()) {
@@ -99,7 +134,7 @@ public class FileImportBean implements Serializable {
         }
     }
 
-    private List<String> checkForDuplicatesInDatabase(List<BookCreature> bookCreatures) {
+    public List<String> checkForDuplicatesInDatabase(List<BookCreature> bookCreatures) {
         List<String> duplicateNames = new ArrayList<>();
         for (BookCreature bookCreature : bookCreatures) {
             if (bookCreatureService.isNameExists(bookCreature.getName())) {
@@ -122,7 +157,7 @@ public class FileImportBean implements Serializable {
         return "неизвестное значение";
     }
 
-    private void checkForDuplicatesInFile(List<BookCreature> bookCreatures) {
+    public void checkForDuplicatesInFile(List<BookCreature> bookCreatures) {
         Set<String> seenNames = new HashSet<>();
         List<String> duplicateNames = new ArrayList<>();
 
@@ -137,13 +172,13 @@ public class FileImportBean implements Serializable {
         }
     }
 
-    private List<BookCreature> parseFile(InputStream inputStream) {
+    public List<BookCreature> parseFile(InputStream inputStream) {
         final List<BookCreature> bookCreaturesFromFile = new ArrayList<>();
         ObjectMapper mapper = new ObjectMapper();
 
         try {
             List<BookCreature> parsedCreatures = mapper.readValue(inputStream, new TypeReference<List<BookCreature>>() {});
-            User currentUser = (User) FacesContext.getCurrentInstance().getExternalContext().getSessionMap().get("user");
+            User currentUser = getCurrentUser();
 
             for (BookCreature bookCreature : parsedCreatures) {
                 bookCreature.setUser(currentUser);
@@ -192,80 +227,98 @@ public class FileImportBean implements Serializable {
         return bookCreaturesFromFile;
     }
 
-    private boolean validateBookCreature(BookCreature bookCreature) {
+    public boolean validateBookCreature(BookCreature bookCreature) {
         boolean isValid = true;
 
-        if (bookCreature.getName() == null || bookCreature.getName().isEmpty()) {
+        // Проверка имени существа
+        if (bookCreature.getName() == null || bookCreature.getName().trim().isEmpty()) {
             FacesContext.getCurrentInstance().addMessage("name", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Введите имя!", "Введите имя!"));
             isValid = false;
         }
 
+        // Проверка координат X
         Object x = bookCreature.getCoordinates().getX();
-        if (String.valueOf(bookCreature.getCoordinates().getX()) == null || bookCreature.getCoordinates().getX() >= 488 || !(x instanceof Integer)) {
+        if (String.valueOf(x).trim().isEmpty() || !(x instanceof Integer) || (Integer) x >= 488) {
             FacesContext.getCurrentInstance().addMessage("x", new FacesMessage(FacesMessage.SEVERITY_ERROR, "X обязательно к заполнению и должно быть меньше 488", "X обязательно к заполнению и должно быть меньше 488"));
             isValid = false;
         }
 
+        // Проверка координат Y
         Object y = bookCreature.getCoordinates().getY();
-        if (String.valueOf(bookCreature.getCoordinates().getY()) == null || !(y instanceof Integer)) {
+        if (String.valueOf(y).trim().isEmpty() || !(y instanceof Integer)) {
             FacesContext.getCurrentInstance().addMessage("y", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Y обязательно к заполнению", "Y обязательно к заполнению"));
             isValid = false;
         }
 
-        if (bookCreature.getAge() == null || !(bookCreature.getAge() instanceof Long) || (bookCreature.getAge() < 0)) {
+        // Проверка возраста
+        Object age = bookCreature.getAge();
+        if (String.valueOf(age).trim().isEmpty() || !(age instanceof Long) || (Long) age < 0) {
             FacesContext.getCurrentInstance().addMessage("age", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Age обязательно к заполнению и должно быть > 0", "Age обязательно к заполнению и должно быть > 0"));
             isValid = false;
         }
 
-        if (bookCreature.getCreatureType() == null) {
+        // Проверка типа существа
+        if (bookCreature.getCreatureType() == null || String.valueOf(bookCreature.getCreatureType()).trim().isEmpty()) {
             FacesContext.getCurrentInstance().addMessage("creatureType", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Creature Type обязательно к заполнению", "Creature Type обязательно к заполнению"));
             isValid = false;
         }
 
-        if (Objects.equals(bookCreature.getCreatureLocation().getName(), "Mordor")) {
+        // Проверка имени локации существа
+        String locationName = bookCreature.getCreatureLocation().getName();
+        if (Objects.equals(locationName, "Mordor")) {
             FacesContext.getCurrentInstance().addMessage("cityName", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Нельзя выбрать такое имя для города!", "Нельзя выбрать такое имя для города!"));
             isValid = false;
         }
-
-        if (bookCreature.getCreatureLocation().getName() == null || bookCreature.getCreatureLocation().getName().isEmpty()) {
+        if (locationName == null || locationName.trim().isEmpty()) {
             FacesContext.getCurrentInstance().addMessage("cityName", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Magic City Введите имя!", "Magic City Введите имя!"));
             isValid = false;
         }
 
-        if (bookCreature.getCreatureLocation().getArea() == null || bookCreature.getCreatureLocation().getArea() <= 0) {
+        // Проверка площади локации
+        Object area = bookCreature.getCreatureLocation().getArea();
+        if (String.valueOf(area).trim().isEmpty() || !(area instanceof Integer) || (Integer) area <= 0) {
             FacesContext.getCurrentInstance().addMessage("cityArea", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Magic City Поле Area обязательно к заполнению и должно быть больше 0", "Magic City Поле Area обязательно к заполнению и должно быть больше 0"));
             isValid = false;
         }
 
-        Object p = bookCreature.getCreatureLocation().getPopulation();
-        if (bookCreature.getCreatureLocation().getPopulation() == null || bookCreature.getCreatureLocation().getPopulation() <= 0 || !(p instanceof Integer)) {
+        // Проверка населения локации
+        Object population = bookCreature.getCreatureLocation().getPopulation();
+        if (String.valueOf(population).trim().isEmpty() || !(population instanceof Integer) || (Integer) population <= 0) {
             FacesContext.getCurrentInstance().addMessage("cityPopulation", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Magic City Поле Population обязательно к заполнению и должно быть больше 0", "Magic City Поле Population обязательно к заполнению и должно быть больше 0"));
             isValid = false;
         }
 
-        Object d = bookCreature.getCreatureLocation().getPopulationDensity();
-        if (String.valueOf(bookCreature.getCreatureLocation().getPopulationDensity()) == null || bookCreature.getCreatureLocation().getPopulationDensity() <= 0 || !(d instanceof Integer)) {
+        // Проверка плотности населения
+        Object density = bookCreature.getCreatureLocation().getPopulationDensity();
+        if (String.valueOf(density).trim().isEmpty() || !(density instanceof Integer) || (Integer) density <= 0) {
             FacesContext.getCurrentInstance().addMessage("cityPopulationDensity", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Magic City Поле Population Density обязательно к заполнению и должно быть больше 0", "Magic City Поле Population Density обязательно к заполнению и должно быть больше 0"));
             isValid = false;
         }
 
-        if (bookCreature.getAttackLevel() == null || bookCreature.getAttackLevel() <= 0) {
+        // Проверка уровня атаки
+        Object attackLevel = bookCreature.getAttackLevel();
+        if (String.valueOf(attackLevel).trim().isEmpty() || !(attackLevel instanceof Integer) || (Integer) attackLevel <= 0) {
             FacesContext.getCurrentInstance().addMessage("attackLevel", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Attack Level обязательно к заполнению и больше 0", "Attack Level обязательно к заполнению и больше 0"));
             isValid = false;
         }
 
-        if (bookCreature.getDefenseLevel() == null || bookCreature.getDefenseLevel() <= 0) {
-            FacesContext.getCurrentInstance().addMessage("defenseLevel", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Defense Level обязательно к заполнению и больше 0e", "Defense Level обязательно к заполнению и больше 0e"));
+        // Проверка уровня защиты
+        Object defenseLevel = bookCreature.getDefenseLevel();
+        if (String.valueOf(defenseLevel).trim().isEmpty() || !(defenseLevel instanceof Integer) || (Integer) defenseLevel <= 0) {
+            FacesContext.getCurrentInstance().addMessage("defenseLevel", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Defense Level обязательно к заполнению и больше 0", "Defense Level обязательно к заполнению и больше 0"));
             isValid = false;
         }
 
-        if (bookCreature.getRing().getName() == null || bookCreature.getRing().getName().isEmpty()) {
+        // Проверка имени кольца
+        String ringName = bookCreature.getRing().getName();
+        if (ringName == null || ringName.trim().isEmpty()) {
             FacesContext.getCurrentInstance().addMessage("ringName", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Ring Введите имя!", "Ring Введите имя!"));
             isValid = false;
         }
 
-        Object power = bookCreature.getRing().getPower();
-        if (bookCreature.getRing().getPower() == null || bookCreature.getRing().getPower() <= 0 || !(power instanceof Integer)) {
+        // Проверка силы кольца
+        Object ringPower = bookCreature.getRing().getPower();
+        if (String.valueOf(ringPower).trim().isEmpty() || !(ringPower instanceof Integer) || (Integer) ringPower <= 0) {
             FacesContext.getCurrentInstance().addMessage("ringPower", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Ring Power обязательно к заполнению и больше 0", "Ring Power обязательно к заполнению и больше 0"));
             isValid = false;
         }
@@ -273,7 +326,4 @@ public class FileImportBean implements Serializable {
         return isValid;
     }
 
-    public boolean validateAllFields() {
-        return validateBookCreature(this.bookCreature);
-    }
 }

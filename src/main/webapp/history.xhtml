@@ -2,7 +2,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
       xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
-      xmlns:f="http://xmlns.jcp.org/jsf/core">
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
 <h:head>
     <title>Book Creature History</title>
     <style>
@@ -67,28 +68,31 @@
     </div>
     <h1 class="centered-title">Book Creature History</h1>
     <div class="container">
-        <h:dataTable value="#{historyBean.historyList}" var="history">
-            <h:column>
-                <f:facet name="header">User ID</f:facet>
-                #{history.userId}
-            </h:column>
-            <h:column>
-                <f:facet name="header">Creature Type</f:facet>
-                #{history.objectType}
-            </h:column>
-            <h:column>
-                <f:facet name="header">Creature ID</f:facet>
-                #{history.bookCreatureId}
-            </h:column>
-            <h:column>
-                <f:facet name="header">Change Date</f:facet>
-                #{history.changeDate}
-            </h:column>
-            <h:column>
-                <f:facet name="header">Change Type</f:facet>
-                #{history.changeType}
-            </h:column>
-        </h:dataTable>
+        <h:form id="history">
+            <h:dataTable value="#{historyBean.historyList}" var="history">
+                <h:column>
+                    <f:facet name="header">User ID</f:facet>
+                    #{history.userId}
+                </h:column>
+                <h:column>
+                    <f:facet name="header">Creature Type</f:facet>
+                    #{history.objectType}
+                </h:column>
+                <h:column>
+                    <f:facet name="header">Creature ID</f:facet>
+                    #{history.bookCreatureId}
+                </h:column>
+                <h:column>
+                    <f:facet name="header">Change Date</f:facet>
+                    #{history.changeDate}
+                </h:column>
+                <h:column>
+                    <f:facet name="header">Change Type</f:facet>
+                    #{history.changeType}
+                </h:column>
+            </h:dataTable>
+            <p:poll interval="2" update="history" />
+        </h:form>
         <h:form>
             <div>
                 <h:commandButton value="&#8592;" action="#{historyBean.previousPage}" disabled="#{historyBean.page == 1}" />

@@ -413,7 +413,8 @@
             <h:commandButton value="Импортировать" action="#{fileImportBean.importBookCreatures}" styleClass="import-button" rendered="#{bookCreatureBean.isUserLoggedIn()}" />
             <h:messages />
         </h:form>
-       <h:form>
+
+        <h:form>
             <h:commandButton value="История импорта" onclick="openImportHistoryModal(); return false;" styleClass="import-button" rendered="#{bookCreatureBean.isUserLoggedIn()}" />
        </h:form>
         <script>
@@ -500,34 +501,30 @@
     </div>
     <div id="importHistoryModal" class="modal">
         <h:form id="importTable">
-
             <div class="modal-content">
-            <span class="close" onclick="closeImportHistoryModal()">×</span>
-            <h2>История импорта</h2>
-            <h:dataTable value="#{importHistoryBean.importHistory}" var="history">
-            <h:column>
-            <f:facet name="header">ID операции</f:facet>
-            #{history.id}
-            </h:column>
-            <h:column>
-            <f:facet name="header">Статус</f:facet>
-            #{history.status}
-            </h:column>
-            <h:column>
-            <f:facet name="header">Пользователь</f:facet>
-            #{history.user.username}
-            </h:column>
-            <h:column>
-            <f:facet name="header">Число добавленных объектов</f:facet>
-            #{history.addedObjects}
-            </h:column>
-            <h:column>
-            <f:facet name="header">Дата</f:facet>
-            #{history.timestamp}
-            </h:column>
-            </h:dataTable>
+                <span class="close" onclick="closeImportHistoryModal()">×</span>
+                <h2>История импорта</h2>
+                <p:dataTable value="#{importHistoryBean.lazyImportHistory}" var="history" lazy="true"
+                             rows="5" paginator="true"
+                             currentPageReportTemplate="{startRecord} to {endRecord} of {totalRecords}"
+                             paginatorPosition="bottom">
+                    <p:column headerText="ID операции">
+                        #{history.id}
+                    </p:column>
+                    <p:column headerText="Статус">
+                        #{history.status}
+                    </p:column>
+                    <p:column headerText="Пользователь">
+                        #{history.user.username}
+                    </p:column>
+                    <p:column headerText="Число добавленных объектов">
+                        #{history.addedObjects}
+                    </p:column>
+                    <p:column headerText="Дата">
+                        #{history.timestamp}
+                    </p:column>
+                </p:dataTable>
             </div>
-            <p:poll interval="2" update="importTable" />
         </h:form>
     </div>
 

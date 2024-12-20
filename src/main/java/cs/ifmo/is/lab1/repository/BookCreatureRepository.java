@@ -59,6 +59,7 @@ public class BookCreatureRepository {
 
             em.persist(bookCreature);
             em.getTransaction().commit();
+            saveAuditLog(bookCreature, BookCreatureHistory.ChangeType.CREATE);
         } catch (Exception e) {
             if (em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
@@ -123,7 +124,6 @@ public class BookCreatureRepository {
         try {
             em.getTransaction().begin();
 
-            // Применяем пессимистическую блокировку
             BookCreature existingBookCreature = em.find(
                     BookCreature.class,
                     bookCreature.getId(),
@@ -134,15 +134,14 @@ public class BookCreatureRepository {
                 throw new EntityNotFoundException("Существо с ID " + bookCreature.getId() + " не найдено");
             }
 
-            // Обновляем поля сущности
             existingBookCreature.setName(bookCreature.getName());
             existingBookCreature.setAge(bookCreature.getAge());
             existingBookCreature.getCreatureLocation().setName(bookCreature.getCreatureLocation().getName());
 
-            // Обновляем объект в БД
-            em.merge(existingBookCreature);  // merge или update объекта, который уже заблокирован
+            em.merge(existingBookCreature);
 
             em.getTransaction().commit();
+            saveAuditLog(bookCreature, BookCreatureHistory.ChangeType.UPDATE);
         } catch (Exception e) {
             if (em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
@@ -173,19 +172,22 @@ public class BookCreatureRepository {
     }
 
 
+    @Transactional
     public void delete(Integer id) {
         EntityManager em = emf.createEntityManager();
         try {
             em.getTransaction().begin();
 
-            BookCreature bookCreature = em.find(BookCreature.class, id);
+            BookCreature bookCreature = em.find(BookCreature.class, id, LockModeType.PESSIMISTIC_WRITE);
             if (bookCreature == null) {
+                em.getTransaction().rollback();
                 throw new EntityNotFoundException("Entity not found for ID: " + id);
             }
+
             em.remove(bookCreature);
-            saveAuditLog(bookCreature, BookCreatureHistory.ChangeType.DELETE);
 
             em.getTransaction().commit();
+            saveAuditLog(bookCreature, BookCreatureHistory.ChangeType.DELETE);
         } catch (Exception e) {
             if (em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
@@ -195,6 +197,7 @@ public class BookCreatureRepository {
             em.close();
         }
     }
+
 
     public List<BookCreature> findAll(int page, int pageSize, Integer filterId, String filterName, Long filterAge, String filterCoordinatesX, String filterCoordinatesY, String filterCreationDate, List<BookCreatureType> filterCreatureTypes, String filterCreatureLocation, String filterAttackLevel, String filterDefenseLevel, String filterRing, String sortField, boolean sortAscending) {
         EntityManager em = emf.createEntityManager();

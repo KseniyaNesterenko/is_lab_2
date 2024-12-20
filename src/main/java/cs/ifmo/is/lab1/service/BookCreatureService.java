@@ -34,21 +34,10 @@ public class BookCreatureService implements Serializable {
     @Inject
     private RingRepository ringRepository;
 
-
-//    @Transactional
-//    public void create(BookCreature bookCreature) {
-//        if (isNameExists(bookCreature.getName())) {
-//            System.out.println("Существо с таким именем уже существует");
-//            return;
-//        }
-//        bookCreatureRepository.create(bookCreature);
-//    }
-
     @Transactional
     public void create(BookCreature bookCreature) {
         bookCreatureRepository.create(bookCreature);
     }
-
 
 
     public void create(MagicCity magicCity) {
@@ -242,7 +231,7 @@ public class BookCreatureService implements Serializable {
         create(defaultBookCreature);
     }
 
-    @Transactional
+//    @Transactional
     public void importBookCreatures(List<BookCreature> bookCreatures) {
         EntityManager em = emf.createEntityManager();
         try {
@@ -250,7 +239,17 @@ public class BookCreatureService implements Serializable {
 
             for (BookCreature bookCreature : bookCreatures) {
                 validateBookCreature(bookCreature);
-                em.persist(bookCreature);
+
+                try {
+                    em.persist(bookCreature);
+                    em.flush();
+                } catch (PersistenceException e) {
+                    if (isDuplicateException(e)) {
+                        throw new RuntimeException("Дубликат объекта: " + bookCreature.toString(), e);
+                    } else {
+                        throw e;
+                    }
+                }
             }
 
             em.getTransaction().commit();
@@ -264,67 +263,79 @@ public class BookCreatureService implements Serializable {
         }
     }
 
+    private boolean isDuplicateException(Exception e) {
+        Throwable cause = e.getCause();
+        while (cause != null) {
+            if (cause.getMessage().contains("unique constraint")) {
+                return true;
+            }
+            cause = cause.getCause();
+        }
+        return false;
+    }
+
+
 
     private void validateBookCreature(BookCreature bookCreature) {
-        if (bookCreature.getName() == null || bookCreature.getName().isEmpty()) {
-            throw new IllegalArgumentException("Имя существа не может быть пустым.");
+        if (bookCreature.getName() == null || bookCreature.getName().trim().isEmpty() || bookCreature.getName().trim().isBlank()) {
+            throw new IllegalArgumentException("Имя существа не может быть пустым или содержать только пробелы.");
         }
 
         Object x = bookCreature.getCoordinates().getX();
-        if (x == null || !(x instanceof Integer) || (Integer) x >= 488) {
-            throw new IllegalArgumentException("X обязательно к заполнению, должно быть меньше 488 и числом.");
+        if (x == null || !(x instanceof Integer) || (Integer) x >= 488 || String.valueOf(x).trim().isEmpty()) {
+            throw new IllegalArgumentException("X обязательно к заполнению, должно быть меньше 488, числом и не пустым.");
         }
 
         Object y = bookCreature.getCoordinates().getY();
-        if (y == null || !(y instanceof Integer)) {
-            throw new IllegalArgumentException("Y обязательно к заполнению и должно быть числом.");
+        if (y == null || !(y instanceof Integer) || String.valueOf(y).trim().isEmpty()) {
+            throw new IllegalArgumentException("Y обязательно к заполнению, должно быть числом и не пустым.");
         }
 
-        if (bookCreature.getAge() == null || !(bookCreature.getAge() instanceof Long) || bookCreature.getAge() < 0) {
-            throw new IllegalArgumentException("Возраст обязательно к заполнению и должен быть положительным числом.");
+        if (bookCreature.getAge() == null || !(bookCreature.getAge() instanceof Long) || bookCreature.getAge() < 0 || String.valueOf(bookCreature.getAge()).trim().isEmpty()) {
+            throw new IllegalArgumentException("Возраст обязательно к заполнению, должен быть положительным числом и не пустым.");
         }
 
-        if (bookCreature.getCreatureType() == null) {
-            throw new IllegalArgumentException("Тип существа обязателен к заполнению.");
+        if (bookCreature.getCreatureType() == null || String.valueOf(bookCreature.getCreatureType()).trim().isEmpty()) {
+            throw new IllegalArgumentException("Тип существа обязателен к заполнению и не может быть пустым.");
         }
 
         if ("Mordor".equals(bookCreature.getCreatureLocation().getName())) {
             throw new IllegalArgumentException("Город не может называться Mordor.");
         }
 
-        if (bookCreature.getCreatureLocation().getName() == null || bookCreature.getCreatureLocation().getName().isEmpty()) {
-            throw new IllegalArgumentException("Имя города обязательно к заполнению.");
+        if (bookCreature.getCreatureLocation().getName() == null || bookCreature.getCreatureLocation().getName().trim().isEmpty() || bookCreature.getCreatureLocation().getName().trim().isBlank()) {
+            throw new IllegalArgumentException("Имя города обязательно к заполнению и не может содержать только пробелы.");
         }
 
-        if (bookCreature.getCreatureLocation().getArea() == null || bookCreature.getCreatureLocation().getArea() <= 0) {
-            throw new IllegalArgumentException("Площадь города обязательна к заполнению и должна быть больше 0.");
+        if (bookCreature.getCreatureLocation().getArea() == null || bookCreature.getCreatureLocation().getArea() <= 0 || String.valueOf(bookCreature.getCreatureLocation().getArea()).trim().isEmpty()) {
+            throw new IllegalArgumentException("Площадь города обязательна к заполнению, должна быть больше 0 и не пустым значением.");
         }
 
         Object population = bookCreature.getCreatureLocation().getPopulation();
-        if (population == null || !(population instanceof Integer) || (Integer) population <= 0) {
-            throw new IllegalArgumentException("Население города обязательно к заполнению и должно быть положительным числом.");
+        if (population == null || !(population instanceof Integer) || (Integer) population <= 0 || String.valueOf(population).trim().isEmpty()) {
+            throw new IllegalArgumentException("Население города обязательно к заполнению, должно быть положительным числом и не пустым.");
         }
 
         Object populationDensity = bookCreature.getCreatureLocation().getPopulationDensity();
-        if (populationDensity == null || !(populationDensity instanceof Integer) || (Integer) populationDensity <= 0) {
-            throw new IllegalArgumentException("Плотность населения города обязательна к заполнению и должна быть положительным числом.");
+        if (populationDensity == null || !(populationDensity instanceof Integer) || (Integer) populationDensity <= 0 || String.valueOf(populationDensity).trim().isEmpty()) {
+            throw new IllegalArgumentException("Плотность населения города обязательна к заполнению, должна быть положительным числом и не пустым.");
         }
 
-        if (bookCreature.getAttackLevel() == null || bookCreature.getAttackLevel() <= 0) {
-            throw new IllegalArgumentException("Уровень атаки обязателен к заполнению и должен быть больше 0.");
+        if (bookCreature.getAttackLevel() == null || bookCreature.getAttackLevel() <= 0 || String.valueOf(bookCreature.getAttackLevel()).trim().isEmpty()) {
+            throw new IllegalArgumentException("Уровень атаки обязателен к заполнению, должен быть больше 0 и не пустым.");
         }
 
-        if (bookCreature.getDefenseLevel() == null || bookCreature.getDefenseLevel() <= 0) {
-            throw new IllegalArgumentException("Уровень защиты обязателен к заполнению и должен быть больше 0.");
+        if (bookCreature.getDefenseLevel() == null || bookCreature.getDefenseLevel() <= 0 || String.valueOf(bookCreature.getDefenseLevel()).trim().isEmpty()) {
+            throw new IllegalArgumentException("Уровень защиты обязателен к заполнению, должен быть больше 0 и не пустым.");
         }
 
-        if (bookCreature.getRing().getName() == null || bookCreature.getRing().getName().isEmpty()) {
-            throw new IllegalArgumentException("Имя кольца обязательно к заполнению.");
+        if (bookCreature.getRing().getName() == null || bookCreature.getRing().getName().trim().isEmpty() || bookCreature.getRing().getName().trim().isBlank()) {
+            throw new IllegalArgumentException("Имя кольца обязательно к заполнению и не может содержать только пробелы.");
         }
 
         Object ringPower = bookCreature.getRing().getPower();
-        if (ringPower == null || !(ringPower instanceof Integer) || (Integer) ringPower <= 0) {
-            throw new IllegalArgumentException("Сила кольца обязательна к заполнению и должна быть положительным числом.");
+        if (ringPower == null || !(ringPower instanceof Integer) || (Integer) ringPower <= 0 || String.valueOf(ringPower).trim().isEmpty()) {
+            throw new IllegalArgumentException("Сила кольца обязательна к заполнению, должна быть положительным числом и не пустым.");
         }
     }
 
@@ -337,8 +348,8 @@ public class BookCreatureService implements Serializable {
                             "SELECT bc FROM BookCreature bc WHERE bc.name = :name", BookCreature.class
                     )
                     .setParameter("name", name)
-                    .setLockMode(LockModeType.PESSIMISTIC_WRITE) // Блокируем строку
-                    .setMaxResults(1) // Берём только одну строку
+                    .setLockMode(LockModeType.PESSIMISTIC_WRITE)
+                    .setMaxResults(1)
                     .getResultList();
 
             em.getTransaction().commit();

@@ -23,24 +23,22 @@ public class ImportHistoryService implements Serializable {
     public void saveImportHistory(User user, String status, int addedObjects) {
         EntityManager em = emf.createEntityManager();
         try {
-            em.getTransaction().begin(); // Начало транзакции
+            em.getTransaction().begin();
 
             ImportHistory importHistory = new ImportHistory();
             importHistory.setUser(user);
             importHistory.setStatus(status);
             importHistory.setAddedObjects(addedObjects);
 
-            em.persist(importHistory); // Сохранение объекта
-            em.getTransaction().commit(); // Завершение транзакции
+            em.persist(importHistory);
+            em.getTransaction().commit();
 
         } catch (Exception e) {
-            // В случае ошибки откатываем транзакцию
             if (em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
             }
-            throw e; // Пробрасываем исключение дальше
+            throw e;
         } finally {
-            // Закрываем EntityManager в любом случае
             em.close();
         }
     }
@@ -57,4 +55,38 @@ public class ImportHistoryService implements Serializable {
                     .getResultList();
         }
     }
+
+    public List<ImportHistory> getImportHistoryPaginated(User user, boolean isAdmin, int page, int pageSize) {
+        EntityManager em = emf.createEntityManager();
+        int startPosition = (page - 1) * pageSize;
+
+        if (isAdmin) {
+            return em.createQuery("SELECT i FROM ImportHistory i ORDER BY i.timestamp ASC", ImportHistory.class)
+                    .setFirstResult(startPosition)
+                    .setMaxResults(pageSize)
+                    .getResultList();
+        } else {
+            return em.createQuery("SELECT i FROM ImportHistory i WHERE i.user = :user ORDER BY i.timestamp ASC", ImportHistory.class)
+                    .setParameter("user", user)
+                    .setFirstResult(startPosition)
+                    .setMaxResults(pageSize)
+                    .getResultList();
+        }
+    }
+
+    public int getTotalImportHistoryCount(User user, boolean isAdmin) {
+        EntityManager em = emf.createEntityManager();
+        try {
+            if (isAdmin) {
+                return ((Long) em.createQuery("SELECT COUNT(i) FROM ImportHistory i").getSingleResult()).intValue();
+            } else {
+                return ((Long) em.createQuery("SELECT COUNT(i) FROM ImportHistory i WHERE i.user = :user")
+                        .setParameter("user", user)
+                        .getSingleResult()).intValue();
+            }
+        } finally {
+            em.close();
+        }
+    }
+
 }
