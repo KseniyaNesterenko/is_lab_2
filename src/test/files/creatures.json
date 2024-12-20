@@ -34,7 +34,7 @@
     "age": 7,
     "creatureType": "HOBBIT",
     "creatureLocation": {
-      "name": "Питер",
+      "name": "Спб",
       "area": 100.0,
       "population": 1000,
       "populationDensity": 10,
@@ -59,7 +59,7 @@
     "age": 5,
     "creatureType": "HOBBIT",
     "creatureLocation": {
-      "name": "Питер",
+      "name": "圣彼得堡",
       "area": 100.0,
       "population": 1000,
       "populationDensity": 10,

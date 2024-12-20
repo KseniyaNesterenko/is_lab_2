@@ -1,4 +1,4 @@
-name
-Unique 1
-Unique 2
-Unique 3
+name,city,color
+Unique 1,Spb,null
+Unique 2,圣彼得堡,#5a7d47
+Unique 3,Питер,#473e1f

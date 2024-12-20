@@ -5,8 +5,13 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.*;
 import jakarta.transaction.Transactional;
+
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
+import jakarta.transaction.Transactional.TxType;
+import jakarta.transaction.TransactionScoped;
 
 @ApplicationScoped
 public class BookCreatureRepository {
@@ -38,11 +43,17 @@ public class BookCreatureRepository {
         bookCreatureHistoryRepository.persist(history);
     }
 
+    private final Object lock = new Object();
+
+
     @Transactional
-    public void create(BookCreature bookCreature) {
+    public void create(BookCreature bookCreature) throws SQLException {
         EntityManager em = emf.createEntityManager();
         try {
             em.getTransaction().begin();
+
+            Connection connection = em.unwrap(java.sql.Connection.class);
+            connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
 
             boolean exists = !em.createQuery(
                             "SELECT bc FROM BookCreature bc WHERE bc.name = :name", BookCreature.class)
@@ -69,7 +80,6 @@ public class BookCreatureRepository {
             em.close();
         }
     }
-
 
 
     public void createShort(BookCreature bookCreature) {
@@ -119,11 +129,12 @@ public class BookCreatureRepository {
     }
 
     @Transactional
-    public void update(BookCreature bookCreature) {
+    public void update(BookCreature bookCreature) throws SQLException {
         EntityManager em = emf.createEntityManager();
         try {
             em.getTransaction().begin();
-
+            Connection connection = em.unwrap(java.sql.Connection.class);
+            connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
             BookCreature existingBookCreature = em.find(
                     BookCreature.class,
                     bookCreature.getId(),
@@ -173,11 +184,12 @@ public class BookCreatureRepository {
 
 
     @Transactional
-    public void delete(Integer id) {
+    public void delete(Integer id) throws SQLException {
         EntityManager em = emf.createEntityManager();
         try {
             em.getTransaction().begin();
-
+            Connection connection = em.unwrap(java.sql.Connection.class);
+            connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
             BookCreature bookCreature = em.find(BookCreature.class, id, LockModeType.PESSIMISTIC_WRITE);
             if (bookCreature == null) {
                 em.getTransaction().rollback();

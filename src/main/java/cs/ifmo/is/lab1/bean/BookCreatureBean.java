@@ -22,6 +22,7 @@ import org.primefaces.model.file.UploadedFile;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -58,7 +59,7 @@ public class BookCreatureBean implements Serializable {
     private String filterRing;
 
     @PostConstruct
-    public void init() {
+    public void init() throws SQLException {
         if (bookCreature == null) {
             bookCreature = new BookCreature();
             bookCreature.setName("Default Name");
@@ -83,7 +84,7 @@ public class BookCreatureBean implements Serializable {
 
     }
 
-    private void addDefaultBookCreaturesIfNotExist() {
+    private void addDefaultBookCreaturesIfNotExist() throws SQLException {
         User currentUser = new User();
         currentUser.setId(1);
         currentUser.setUsername("a");
@@ -99,7 +100,7 @@ public class BookCreatureBean implements Serializable {
                     defaultBookCreature.setCreationDate(new Date());
                     defaultBookCreature.setAge(2L);
                     defaultBookCreature.setCreatureType(BookCreatureType.HOBBIT);
-                    defaultBookCreature.setCreatureLocation(new MagicCity("TEST", 100.0, 1000, new Date(), MagicCity.GovernorType.HOBBIT, true, 10, currentUser));
+                    defaultBookCreature.setCreatureLocation(new MagicCity("TEST" + (i + 1), 100.0, 1000, new Date(), MagicCity.GovernorType.HOBBIT, true, 10, currentUser));
                     defaultBookCreature.setAttackLevel(5F);
                     defaultBookCreature.setDefenseLevel(5F);
                     defaultBookCreature.setRing(new Ring("Example Ring " + (i + 1), 10, currentUser));
@@ -117,7 +118,7 @@ public class BookCreatureBean implements Serializable {
     }
 
 
-    public String addToDatabase() {
+    public String addToDatabase() throws SQLException {
         if (validateAllFields()) {
             if (bookCreatureService.isNameExists(this.bookCreature.getName())) {
                 FacesContext.getCurrentInstance().addMessage(null,
@@ -153,7 +154,7 @@ public class BookCreatureBean implements Serializable {
     }
 
 
-    public String addDefaultBookCreature() {
+    public String addDefaultBookCreature() throws SQLException {
         BookCreature defaultBookCreature = new BookCreature();
         defaultBookCreature.setName("Example");
         defaultBookCreature.setCoordinates(new Coordinates(2, 2));
@@ -311,7 +312,7 @@ public class BookCreatureBean implements Serializable {
         }
     }
 
-    public String create() {
+    public String create() throws SQLException {
         try {
             User currentUser = (User) FacesContext.getCurrentInstance().getExternalContext().getSessionMap().get("user");
             bookCreature.setUser(currentUser);

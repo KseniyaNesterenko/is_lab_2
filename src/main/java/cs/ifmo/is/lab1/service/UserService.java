@@ -107,8 +107,8 @@ public class UserService implements Serializable {
     private void initializeAdmin() {
         if (userRepository.findUserByUsername("a") == null) {
             createInitialAdmin("a", "a");
-            createInitialUser("u", "u");
-            createInitialUser("t", "t");
+            createInitialAdmin("u", "u");
+            createInitialAdmin("t", "t");
         }
     }
 

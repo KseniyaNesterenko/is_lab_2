@@ -12,6 +12,8 @@ import jakarta.persistence.*;
 import jakarta.transaction.Transactional;
 
 import java.io.Serializable;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 
@@ -35,7 +37,7 @@ public class BookCreatureService implements Serializable {
     private RingRepository ringRepository;
 
     @Transactional
-    public void create(BookCreature bookCreature) {
+    public void create(BookCreature bookCreature) throws SQLException {
         bookCreatureRepository.create(bookCreature);
     }
 
@@ -161,7 +163,7 @@ public class BookCreatureService implements Serializable {
         return bookCreatureRepository.findByRingId(ringId);
     }
 
-    public void addDefaultBookCreaturesIfNotExist(User currentUser) {
+    public void addDefaultBookCreaturesIfNotExist(User currentUser) throws SQLException {
         List<BookCreature> existingCreatures = findByUserId(currentUser.getId());
         if (existingCreatures.isEmpty()) {
             for (int i = 0; i < 6; i++) {
@@ -196,7 +198,7 @@ public class BookCreatureService implements Serializable {
         bookCreature.setRing(new Ring("Default Ring", 10, currentUser));
     }
 
-    public void addToDatabase(BookCreature bookCreature, User currentUser) {
+    public void addToDatabase(BookCreature bookCreature, User currentUser) throws SQLException {
         BookCreature newBookCreature = new BookCreature();
         newBookCreature.setName(bookCreature.getName());
         newBookCreature.setCoordinates(new Coordinates(bookCreature.getCoordinates().getX(), bookCreature.getCoordinates().getY()));
@@ -215,7 +217,7 @@ public class BookCreatureService implements Serializable {
         create(newBookCreature);
     }
 
-    public void addDefaultBookCreature(User currentUser) {
+    public void addDefaultBookCreature(User currentUser) throws SQLException {
         BookCreature defaultBookCreature = new BookCreature();
         defaultBookCreature.setName("Example");
         defaultBookCreature.setCoordinates(new Coordinates(2, 2));
@@ -231,12 +233,14 @@ public class BookCreatureService implements Serializable {
         create(defaultBookCreature);
     }
 
-//    @Transactional
+
+    @Transactional
     public void importBookCreatures(List<BookCreature> bookCreatures) {
         EntityManager em = emf.createEntityManager();
         try {
             em.getTransaction().begin();
-
+            Connection connection = em.unwrap(java.sql.Connection.class);
+            connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
             for (BookCreature bookCreature : bookCreatures) {
                 validateBookCreature(bookCreature);
 
@@ -362,9 +366,33 @@ public class BookCreatureService implements Serializable {
         } finally {
             em.close();
         }
+
     }
 
+    public boolean isCityNameExists(String cityName) throws SQLException {
+        EntityManager em = emf.createEntityManager();
+        try {
+            em.getTransaction().begin();
 
+            List<MagicCity> results = em.createQuery(
+                            "SELECT mc FROM MagicCity mc WHERE mc.name = :name", MagicCity.class
+                    )
+                    .setParameter("name", cityName)
+                    .setLockMode(LockModeType.PESSIMISTIC_WRITE)
+                    .setMaxResults(1)
+                    .getResultList();
+
+            em.getTransaction().commit();
+            return !results.isEmpty();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            throw e;
+        } finally {
+            em.close();
+        }
+    }
 
 
 }

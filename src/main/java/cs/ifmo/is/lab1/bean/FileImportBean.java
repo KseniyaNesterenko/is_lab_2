@@ -18,6 +18,7 @@ import jakarta.servlet.http.Part;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.sql.SQLException;
 import java.util.*;
 
 @Named
@@ -137,43 +138,46 @@ public class FileImportBean implements Serializable {
     }
 
 
-    public List<String> checkForDuplicatesInDatabase(List<BookCreature> bookCreatures) {
+    public List<String> checkForDuplicatesInDatabase(List<BookCreature> bookCreatures) throws SQLException {
         List<String> duplicateNames = new ArrayList<>();
         for (BookCreature bookCreature : bookCreatures) {
             if (bookCreatureService.isNameExists(bookCreature.getName())) {
-                duplicateNames.add(bookCreature.getName());
+                duplicateNames.add("Существо: " + bookCreature.getName());
+            }
+
+            if (bookCreature.getCreatureLocation() != null) {
+                MagicCity city = bookCreature.getCreatureLocation();
+                if (bookCreatureService.isCityNameExists(city.getName())) {
+                    duplicateNames.add("Город: " + city.getName());
+                }
             }
         }
         return duplicateNames;
     }
 
-    private String extractDuplicateValue(String message) {
-        String prefix = "Key (name)=";
-        int startIndex = message.indexOf(prefix);
-        if (startIndex != -1) {
-            startIndex += prefix.length();
-            int endIndex = message.indexOf(" already exists", startIndex);
-            if (endIndex != -1) {
-                return message.substring(startIndex, endIndex).trim();
-            }
-        }
-        return "неизвестное значение";
-    }
-
     public void checkForDuplicatesInFile(List<BookCreature> bookCreatures) {
         Set<String> seenNames = new HashSet<>();
+        Set<String> seenCityNames = new HashSet<>();
         List<String> duplicateNames = new ArrayList<>();
 
         for (BookCreature creature : bookCreatures) {
             if (!seenNames.add(creature.getName())) {
                 duplicateNames.add(creature.getName());
             }
+
+            if (creature.getCreatureLocation() != null && !creature.getCreatureLocation().getName().isEmpty()) {
+                String cityName = creature.getCreatureLocation().getName();
+                if (!seenCityNames.add(cityName)) {
+                    duplicateNames.add("Город: " + cityName);
+                }
+            }
         }
 
         if (!duplicateNames.isEmpty()) {
-            throw new IllegalArgumentException("Файл содержит дубликаты имён: " + String.join(", ", duplicateNames));
+            throw new IllegalArgumentException("Файл содержит дубликаты: " + String.join(", ", duplicateNames));
         }
     }
+
 
     public List<BookCreature> parseFile(InputStream inputStream) {
         final List<BookCreature> bookCreaturesFromFile = new ArrayList<>();
