@@ -517,3 +517,10 @@ td {
     text-decoration: none;
     cursor: pointer;
 }
+
+.status-success {
+    color: green;
+}
+.status-error {
+    color: red;
+}

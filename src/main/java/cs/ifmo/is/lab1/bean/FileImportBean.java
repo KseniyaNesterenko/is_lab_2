@@ -73,66 +73,69 @@ public class FileImportBean implements Serializable {
 
 
     public void importBookCreatures() {
+        if (uploadedFile == null) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                            "Пожалуйста, выберите файл для импорта.", null));
+            return;
+        }
+
         System.out.println("Uploaded file size: " + uploadedFile.getSize());
         System.out.println("Uploaded file content type: " + uploadedFile.getContentType());
 
-        if (uploadedFile != null) {
-            User currentUser = getCurrentUser();
-            int addedObjects = 0;
-            try (InputStream inputStream = uploadedFile.getInputStream()) {
-                List<BookCreature> bookCreatures = parseFile(inputStream);
+        User currentUser = getCurrentUser();
+        int addedObjects = 0;
+        try (InputStream inputStream = uploadedFile.getInputStream()) {
+            List<BookCreature> bookCreatures = parseFile(inputStream);
 
-                checkForDuplicatesInFile(bookCreatures);
+            checkForDuplicatesInFile(bookCreatures);
 
-                List<String> duplicateNamesInDb = checkForDuplicatesInDatabase(bookCreatures);
+            List<String> duplicateNamesInDb = checkForDuplicatesInDatabase(bookCreatures);
 
-                if (!duplicateNamesInDb.isEmpty()) {
+            if (!duplicateNamesInDb.isEmpty()) {
+                FacesContext.getCurrentInstance().addMessage(null,
+                        new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                                "Ошибка: Следующие имена уже существуют в базе данных: " + String.join(", ", duplicateNamesInDb),
+                                null));
+                importHistoryService.saveImportHistory(currentUser, "Неуспешно", addedObjects);
+                return;
+            }
+
+            for (BookCreature bookCreature : bookCreatures) {
+                if (!validateBookCreature(bookCreature)) {
                     FacesContext.getCurrentInstance().addMessage(null,
                             new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                                    "Ошибка: Следующие имена уже существуют в базе данных: " + String.join(", ", duplicateNamesInDb),
+                                    "Ошибка: Один или несколько объектов содержат некорректные данные. Импорт отменен.",
                                     null));
                     importHistoryService.saveImportHistory(currentUser, "Неуспешно", addedObjects);
                     return;
                 }
-
-                for (BookCreature bookCreature : bookCreatures) {
-                    if (!validateBookCreature(bookCreature)) {
-                        FacesContext.getCurrentInstance().addMessage(null,
-                                new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                                        "Ошибка: Один или несколько объектов содержат некорректные данные. Импорт отменен.",
-                                        null));
-                        importHistoryService.saveImportHistory(currentUser, "Неуспешно", addedObjects);
-                        return;
-                    }
-                }
-
-                bookCreatureService.importBookCreatures(bookCreatures);
-                addedObjects = bookCreatures.size();
-
-                String status = (addedObjects > 0) ? "Успешно" : "Неуспешно";
-                FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO,
-                        addedObjects > 0 ? "Импорт успешно завершен." : "Импорт не завершён", null));
-                importHistoryService.saveImportHistory(currentUser, status, addedObjects);
-
-            } catch (IllegalArgumentException e) {
-                FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                        "Ошибка валидации: " + e.getMessage(), null));
-                importHistoryService.saveImportHistory(currentUser, "Неуспешно", addedObjects);
-            } catch (IOException e) {
-                FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                        "Ошибка при чтении файла.", null));
-                importHistoryService.saveImportHistory(currentUser, "Неуспешно", addedObjects);
-            } catch (Exception e) {
-                e.printStackTrace();
-                FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                        "Ошибка при импорте данных!", null));
-                importHistoryService.saveImportHistory(currentUser, "Неуспешно", addedObjects);
             }
-        } else {
+
+            bookCreatureService.importBookCreatures(bookCreatures);
+            addedObjects = bookCreatures.size();
+
+            String status = (addedObjects > 0) ? "Успешно" : "Неуспешно";
+            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO,
+                    addedObjects > 0 ? "Импорт успешно завершен." : "Импорт не завершён", null));
+            importHistoryService.saveImportHistory(currentUser, status, addedObjects);
+
+        } catch (IllegalArgumentException e) {
             FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                    "Пожалуйста, выберите файл для импорта.", null));
+                    "Ошибка валидации: " + e.getMessage(), null));
+            importHistoryService.saveImportHistory(currentUser, "Неуспешно", addedObjects);
+        } catch (IOException e) {
+            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                    "Ошибка при чтении файла.", null));
+            importHistoryService.saveImportHistory(currentUser, "Неуспешно", addedObjects);
+        } catch (Exception e) {
+            e.printStackTrace();
+            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                    "Ошибка при импорте данных!", null));
+            importHistoryService.saveImportHistory(currentUser, "Неуспешно", addedObjects);
         }
     }
+
 
     public List<String> checkForDuplicatesInDatabase(List<BookCreature> bookCreatures) {
         List<String> duplicateNames = new ArrayList<>();

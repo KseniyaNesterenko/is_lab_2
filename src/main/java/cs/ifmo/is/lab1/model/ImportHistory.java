@@ -1,16 +1,11 @@
 package cs.ifmo.is.lab1.model;
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import java.util.Date;
+import java.time.format.DateTimeFormatter;
 
 @Entity
-public class ImportHistory  {
+public class ImportHistory {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -65,5 +60,11 @@ public class ImportHistory  {
 
     public void setTimestamp(LocalDateTime timestamp) {
         this.timestamp = timestamp;
+    }
+
+    // Метод для получения форматированной строки даты
+    public String getFormattedTimestamp() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy, HH:mm:ss");
+        return this.timestamp.format(formatter);
     }
 }

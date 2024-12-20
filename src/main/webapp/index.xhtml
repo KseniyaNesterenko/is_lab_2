@@ -426,7 +426,6 @@
                 document.getElementById('importHistoryModal').style.display = 'none';
             }
 
-            // Закрытие модального окна при клике вне его
             window.onclick = function(event) {
                 var modal = document.getElementById('importHistoryModal');
                 if (event.target == modal) {
@@ -465,7 +464,6 @@
                     </div>
                 </div>
 
-                <!-- Обновляем только список существ без самого холста -->
                 <p:poll interval="2" update="creatureListContainer" />
             </h:form>
         </h:form>
@@ -512,7 +510,9 @@
                         #{history.id}
                     </p:column>
                     <p:column headerText="Статус">
+                    <span class="#{history.status eq 'Успешно' ? 'status-success' : 'status-error'}">
                         #{history.status}
+                    </span>
                     </p:column>
                     <p:column headerText="Пользователь">
                         #{history.user.username}
@@ -521,7 +521,7 @@
                         #{history.addedObjects}
                     </p:column>
                     <p:column headerText="Дата">
-                        #{history.timestamp}
+                        #{history.formattedTimestamp}
                     </p:column>
                 </p:dataTable>
             </div>
