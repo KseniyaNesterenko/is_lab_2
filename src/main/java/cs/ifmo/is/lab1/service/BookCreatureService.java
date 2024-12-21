@@ -234,7 +234,7 @@ public class BookCreatureService implements Serializable {
     }
 
 
-    @Transactional
+//    @Transactional
     public void importBookCreatures(List<BookCreature> bookCreatures) {
         EntityManager em = emf.createEntityManager();
         try {

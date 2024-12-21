@@ -10,8 +10,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
-import jakarta.transaction.Transactional.TxType;
-import jakarta.transaction.TransactionScoped;
+
 
 @ApplicationScoped
 public class BookCreatureRepository {
@@ -46,7 +45,7 @@ public class BookCreatureRepository {
     private final Object lock = new Object();
 
 
-    @Transactional
+//    @Transactional
     public void create(BookCreature bookCreature) throws SQLException {
         EntityManager em = emf.createEntityManager();
         try {
@@ -128,13 +127,13 @@ public class BookCreatureRepository {
         }
     }
 
-    @Transactional
+//    @Transactional
     public void update(BookCreature bookCreature) throws SQLException {
         EntityManager em = emf.createEntityManager();
         try {
             em.getTransaction().begin();
             Connection connection = em.unwrap(java.sql.Connection.class);
-            connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+            connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
             BookCreature existingBookCreature = em.find(
                     BookCreature.class,
                     bookCreature.getId(),
@@ -183,7 +182,7 @@ public class BookCreatureRepository {
     }
 
 
-    @Transactional
+//    @Transactional
     public void delete(Integer id) throws SQLException {
         EntityManager em = emf.createEntityManager();
         try {
