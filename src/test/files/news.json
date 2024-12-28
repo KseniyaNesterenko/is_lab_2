@@ -1,0 +1,27 @@
+[
+  {
+    "name": "Афанасьев",
+    "coordinates": {
+      "x": 200,
+      "y": 200
+    },
+    "creationDate": "2023-10-01T12:00:00Z",
+    "age": 7,
+    "creatureType": "HOBBIT",
+    "creatureLocation": {
+      "name": "Россия",
+      "area": 100.0,
+      "population": 1000,
+      "populationDensity": 10,
+      "governor": "GOLLUM",
+      "capital": true,
+      "establishmentDate": "2023-10-01T12:00:00Z"
+    },
+    "attackLevel": 5.0,
+    "defenseLevel": 5.0,
+    "ring": {
+      "name": "Коfльцо",
+      "power": 10
+    }
+  }
+]

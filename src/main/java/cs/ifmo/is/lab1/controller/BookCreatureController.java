@@ -6,17 +6,24 @@ import cs.ifmo.is.lab1.model.BookCreature;
 import cs.ifmo.is.lab1.model.BookCreatureType;
 import cs.ifmo.is.lab1.model.User;
 import cs.ifmo.is.lab1.service.BookCreatureService;
+import io.minio.errors.MinioException;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.PersistenceException;
 import jakarta.persistence.PessimisticLockException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 
 import java.io.InputStream;
+import java.net.ConnectException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -163,48 +170,96 @@ public class BookCreatureController {
         return Response.ok("Controller is working!").build();
     }
 
-
     @POST
     @Path("/import")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Response importFile(@FormDataParam("file") InputStream fileInputStream) {
+    public Response importFile(@FormDataParam("fileContent") InputStream fileInputStream,
+                               @HeaderParam("File-Name") String fileName) {
+        System.out.println("Entering importFile method...");
+
         try {
             if (fileInputStream == null) {
+                System.out.println("No file provided for import.");
                 return Response.status(Response.Status.BAD_REQUEST)
-                        .entity("No file provided for import.")
+                        .entity("Пожалуйста, выберите файл для импорта.")
                         .build();
             }
 
+            if (fileName == null || fileName.isEmpty()) {
+                fileName = "uploaded_file_" + System.currentTimeMillis() + ".json";
+            }
+            System.out.println("File name: " + fileName);
+
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            byte[] temp = new byte[8192];
+            int bytesRead;
+            while ((bytesRead = fileInputStream.read(temp)) != -1) {
+                buffer.write(temp, 0, bytesRead);
+            }
+
+            byte[] fileData = buffer.toByteArray();
             User currentUser = fileImportBean.getCurrentUser();
             if (currentUser == null) {
                 return Response.status(Response.Status.UNAUTHORIZED)
-                        .entity("User not authorized.")
+                        .entity("Пользователь не авторизован.")
                         .build();
             }
 
-            List<BookCreature> bookCreatures = fileImportBean.parseFile(fileInputStream);
-            for (BookCreature creature : bookCreatures) {
-                creature.setUser(currentUser);
-                System.out.println(currentUser.getUsername());
-            }
-
+            List<BookCreature> bookCreatures = fileImportBean.parseFile(new ByteArrayInputStream(fileData));
             fileImportBean.checkForDuplicatesInFile(bookCreatures);
             List<String> duplicateNamesInDb = fileImportBean.checkForDuplicatesInDatabase(bookCreatures);
             if (!duplicateNamesInDb.isEmpty()) {
                 return Response.status(Response.Status.CONFLICT)
-                        .entity("Duplicate names found in database: " + String.join(", ", duplicateNamesInDb))
+                        .entity("Ошибка: Следующие имена уже существуют в базе данных: " + String.join(", ", duplicateNamesInDb))
                         .build();
             }
 
-            bookCreatureService.importBookCreatures(bookCreatures);
-            return Response.ok("Imported " + bookCreatures.size() + " BookCreatures").build();
+            bookCreatureService.importBookCreatures(
+                    bookCreatures,
+                    new ByteArrayInputStream(fileData),
+                    fileName,
+                    fileData.length
+            );
+
+            return Response.ok("Импорт успешно завершён. Загружено объектов: " + bookCreatures.size()).build();
+
         } catch (Exception e) {
-            e.printStackTrace();
+            return handleImportException(e);
+        }
+    }
+
+    private Response handleImportException(Exception e) {
+        Throwable rootCause = getRootCause(e);
+
+        if (rootCause instanceof org.postgresql.util.PSQLException) {
+            System.out.println("Database error: " + rootCause.getMessage());
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Error during file import: " + e.getMessage())
+                    .entity("Ошибка базы данных: " + rootCause.getMessage())
+                    .build();
+        } else if (rootCause instanceof org.eclipse.persistence.exceptions.DatabaseException) {
+            System.out.println("Persistence error: " + rootCause.getMessage());
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Ошибка сохранения данных: " + rootCause.getMessage())
+                    .build();
+        } else if (rootCause instanceof java.net.ConnectException) {
+            System.out.println("File storage connection error: " + rootCause.getMessage());
+            return Response.status(Response.Status.SERVICE_UNAVAILABLE)
+                    .entity("Отказ файлового хранилища. Проверьте подключение.")
+                    .build();
+        } else {
+            System.out.println("Unexpected error: " + rootCause.getMessage());
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Неизвестная ошибка: " + rootCause.getMessage())
                     .build();
         }
     }
 
+    private Throwable getRootCause(Throwable throwable) {
+        Throwable cause = throwable;
+        while (cause.getCause() != null && cause != cause.getCause()) {
+            cause = cause.getCause();
+        }
+        return cause;
+    }
 
 }

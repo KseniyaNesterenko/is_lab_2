@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import cs.ifmo.is.lab1.model.*;
 import cs.ifmo.is.lab1.service.BookCreatureService;
+import cs.ifmo.is.lab1.service.FileStorageService;
 import cs.ifmo.is.lab1.service.ImportHistoryService;
 import cs.ifmo.is.lab1.service.UserService;
 import jakarta.faces.application.FacesMessage;
@@ -11,15 +12,17 @@ import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.enterprise.context.RequestScoped;
+import jakarta.persistence.PersistenceException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
+import org.postgresql.util.PSQLException;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.sql.SQLException;
 import java.util.*;
+
+import static com.fasterxml.jackson.databind.util.ClassUtil.getRootCause;
 
 @Named
 @RequestScoped
@@ -31,7 +34,8 @@ public class FileImportBean implements Serializable {
 
     @Inject
     private ImportHistoryService importHistoryService;
-
+    @Inject
+    private FileStorageService fileStorageService;
     private Part uploadedFile;
 
     public Part getUploadedFile() {
@@ -76,8 +80,7 @@ public class FileImportBean implements Serializable {
     public void importBookCreatures() {
         if (uploadedFile == null) {
             FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                            "Пожалуйста, выберите файл для импорта.", null));
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Пожалуйста, выберите файл для импорта.", null));
             return;
         }
 
@@ -86,34 +89,42 @@ public class FileImportBean implements Serializable {
 
         User currentUser = getCurrentUser();
         int addedObjects = 0;
+
         try (InputStream inputStream = uploadedFile.getInputStream()) {
-            List<BookCreature> bookCreatures = parseFile(inputStream);
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            byte[] temp = new byte[8192];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(temp)) != -1) {
+                buffer.write(temp, 0, bytesRead);
+            }
+            byte[] fileData = buffer.toByteArray();
+
+            String uploadedFileName = fileStorageService.uploadFile(uploadedFile.getSubmittedFileName(),
+                    new ByteArrayInputStream(fileData), uploadedFile.getSize());
+
+            List<BookCreature> bookCreatures = parseFile(new ByteArrayInputStream(fileData));
+
 
             checkForDuplicatesInFile(bookCreatures);
 
             List<String> duplicateNamesInDb = checkForDuplicatesInDatabase(bookCreatures);
-
             if (!duplicateNamesInDb.isEmpty()) {
-                FacesContext.getCurrentInstance().addMessage(null,
-                        new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                                "Ошибка: Следующие имена уже существуют в базе данных: " + String.join(", ", duplicateNamesInDb),
-                                null));
+                addErrorMessage("Ошибка: Следующие имена уже существуют в базе данных: " + String.join(", ", duplicateNamesInDb));
                 importHistoryService.saveImportHistory(currentUser, "Неуспешно", addedObjects);
                 return;
             }
 
             for (BookCreature bookCreature : bookCreatures) {
                 if (!validateBookCreature(bookCreature)) {
-                    FacesContext.getCurrentInstance().addMessage(null,
-                            new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                                    "Ошибка: Один или несколько объектов содержат некорректные данные. Импорт отменен.",
-                                    null));
+                    addErrorMessage("Ошибка: Один или несколько объектов содержат некорректные данные. Импорт отменен.");
                     importHistoryService.saveImportHistory(currentUser, "Неуспешно", addedObjects);
                     return;
                 }
             }
 
-            bookCreatureService.importBookCreatures(bookCreatures);
+            bookCreatureService.importBookCreatures(bookCreatures, new ByteArrayInputStream(fileData),
+                    uploadedFile.getSubmittedFileName(), uploadedFile.getSize());
+
             addedObjects = bookCreatures.size();
 
             String status = (addedObjects > 0) ? "Успешно" : "Неуспешно";
@@ -121,20 +132,37 @@ public class FileImportBean implements Serializable {
                     addedObjects > 0 ? "Импорт успешно завершен." : "Импорт не завершён", null));
             importHistoryService.saveImportHistory(currentUser, status, addedObjects);
 
-        } catch (IllegalArgumentException e) {
-            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                    "Ошибка валидации: " + e.getMessage(), null));
-            importHistoryService.saveImportHistory(currentUser, "Неуспешно", addedObjects);
-        } catch (IOException e) {
-            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                    "Ошибка при чтении файла.", null));
-            importHistoryService.saveImportHistory(currentUser, "Неуспешно", addedObjects);
         } catch (Exception e) {
-            e.printStackTrace();
-            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                    "Ошибка при импорте данных!", null));
-            importHistoryService.saveImportHistory(currentUser, "Неуспешно", addedObjects);
+            handleImportException(e, currentUser, addedObjects);
         }
+    }
+
+    private void handleImportException(Exception e, User currentUser, int addedObjects) {
+        Throwable rootCause = getRootCause(e);
+
+        if (rootCause instanceof org.postgresql.util.PSQLException psqlException) {
+            addErrorMessage("Отказ БД: ошибка SQL. Сообщение: " + psqlException.getMessage());
+        } else if (rootCause instanceof org.eclipse.persistence.exceptions.DatabaseException) {
+            addErrorMessage("Отказ БД: ошибка базы данных. Сообщение: " + rootCause.getMessage());
+        } else if (rootCause instanceof java.net.ConnectException) {
+            addErrorMessage("Отказ файлового хранилища. Пожалуйста, проверьте подключение.");
+        } else {
+            addErrorMessage("Ошибка при импорте: " + rootCause.getMessage());
+        }
+
+        importHistoryService.saveImportHistory(currentUser, "Неуспешно", addedObjects);
+    }
+
+    private void addErrorMessage(String message) {
+        FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, message, null));
+    }
+
+    private Throwable getRootCause(Throwable throwable) {
+        Throwable cause = throwable;
+        while (cause.getCause() != null && cause.getCause() != cause) {
+            cause = cause.getCause();
+        }
+        return cause;
     }
 
 

@@ -11,6 +11,11 @@ import jakarta.inject.Inject;
 import jakarta.persistence.*;
 import jakarta.transaction.Transactional;
 
+import java.net.ConnectException;
+import java.util.concurrent.locks.ReentrantLock;
+
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -233,39 +238,151 @@ public class BookCreatureService implements Serializable {
         create(defaultBookCreature);
     }
 
+    @Inject
+    private FileStorageService fileStorageService;
+    private final ReentrantLock importLock = new ReentrantLock();
 
-//    @Transactional
-    public void importBookCreatures(List<BookCreature> bookCreatures) {
+    public void importBookCreatures(List<BookCreature> bookCreatures, InputStream fileInputStream, String fileName, long fileSize) throws ConnectException {
+        if (!importLock.tryLock()) {
+            throw new RuntimeException("Импорт уже выполняется. Попробуйте позже.");
+        }
+
         EntityManager em = emf.createEntityManager();
+        boolean fileUploadedSuccessfully = false;
+        String uploadedFileName = null;
+
         try {
             em.getTransaction().begin();
             Connection connection = em.unwrap(java.sql.Connection.class);
             connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
-            for (BookCreature bookCreature : bookCreatures) {
-                validateBookCreature(bookCreature);
 
-                try {
+            try {
+                // 1-й этап: Загрузка файла в MinIO (подготовка, без коммита)
+                uploadedFileName = fileStorageService.uploadFile(fileName, fileInputStream, fileSize);
+                fileUploadedSuccessfully = true;
+
+                // 2-й этап: Сохранение объектов в БД (подготовка, без коммита)
+                for (BookCreature bookCreature : bookCreatures) {
+                    validateBookCreature(bookCreature);
                     em.persist(bookCreature);
-                    em.flush();
-                } catch (PersistenceException e) {
-                    if (isDuplicateException(e)) {
-                        throw new RuntimeException("Дубликат объекта: " + bookCreature.toString(), e);
-                    } else {
-                        throw e;
+                }
+                em.flush();
+
+            } catch (Exception e) {
+                if (em.getTransaction().isActive()) {
+                    em.getTransaction().rollback();
+                }
+
+                if (fileUploadedSuccessfully && uploadedFileName != null) {
+                    try {
+                        fileStorageService.deleteFile(uploadedFileName);
+                    } catch (Exception deleteException) {
+                        System.out.println("Ошибка при удалении файла из хранилища после неудачной транзакции: " + deleteException.getMessage());
                     }
                 }
+
+                throw new RuntimeException("Ошибка при импорте данных (фаза подготовки): " + e.getMessage(), e);
             }
 
-            em.getTransaction().commit();
-        } catch (Exception e) {
-            if (em.getTransaction().isActive()) {
-                em.getTransaction().rollback();
+            // 2-я фаза: Подтверждение изменений (коммит)
+            try {
+                em.getTransaction().commit();
+
+                System.out.println("Файл успешно загружен в хранилище и данные сохранены в БД.");
+
+            } catch (Exception commitException) {
+                if (em.getTransaction().isActive()) {
+                    em.getTransaction().rollback();
+                }
+
+                if (fileUploadedSuccessfully && uploadedFileName != null) {
+                    try {
+                        fileStorageService.deleteFile(uploadedFileName);
+                    } catch (Exception deleteException) {
+                        System.out.println("Ошибка при удалении файла из хранилища после неудачного коммита: " + deleteException.getMessage());
+                    }
+                }
+
+                throw new RuntimeException("Ошибка при подтверждении данных: " + commitException.getMessage(), commitException);
             }
-            throw new RuntimeException("Ошибка при импорте: " + e.getMessage(), e);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Ошибка при импорте данных: " + e.getMessage(), e);
         } finally {
             em.close();
+            importLock.unlock();
         }
     }
+
+    private void handleServiceException(Exception e, EntityManager em, boolean fileUploadedSuccessfully, String uploadedFileName) {
+        if (em.getTransaction().isActive()) {
+            em.getTransaction().rollback();
+        }
+
+        if (fileUploadedSuccessfully && uploadedFileName != null) {
+            try {
+                fileStorageService.deleteFile(uploadedFileName);
+            } catch (Exception deleteException) {
+                System.out.println("Ошибка при удалении файла: " + deleteException.getMessage());
+            }
+        }
+    }
+
+
+
+//    public void importBookCreatures(List<BookCreature> bookCreatures, InputStream fileInputStream, String fileName, long fileSize) throws ConnectException {
+//        if (!importLock.tryLock()) {
+//            throw new RuntimeException("Импорт уже выполняется. Попробуйте позже.");
+//        }
+//
+//        EntityManager em = emf.createEntityManager();
+//        try {
+//            em.getTransaction().begin();
+//
+//            Connection connection = em.unwrap(java.sql.Connection.class);
+//            connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+//
+//            // Загрузка файла в MinIO с использованием InputStream
+//            String uploadedFileName;
+//            try {
+//                uploadedFileName = fileStorageService.uploadFile(fileName, fileInputStream, fileSize);
+//            } catch (ConnectException e) {
+//                throw new RuntimeException("Ошибка подключения к файловому хранилищу: " + e.getMessage(), e);
+//            } catch (Exception e) {
+//                throw new RuntimeException("Ошибка при загрузке файла в файловое хранилище: " + e.getMessage(), e);
+//            }
+//
+//
+//
+//            // Сохранение объектов в БД
+//            for (BookCreature bookCreature : bookCreatures) {
+//                validateBookCreature(bookCreature);
+//                try {
+//                    em.persist(bookCreature);
+//                    em.flush();
+//                } catch (PersistenceException e) {
+//                    if (isDuplicateException(e)) {
+//                        throw new RuntimeException("Дубликат объекта: " + bookCreature.toString(), e);
+//                    } else {
+//                        throw e;
+//                    }
+//                }
+//            }
+//
+//            // Подтверждение транзакции
+//            em.getTransaction().commit();
+//
+//        } catch (Exception e) {
+//            if (em.getTransaction().isActive()) {
+//                em.getTransaction().rollback();
+//            }
+//            throw new RuntimeException("Ошибка при импорте данных: " + e.getMessage(), e);
+//        } finally {
+//            em.close();
+//            importLock.unlock();
+//        }
+//    }
+
 
     private boolean isDuplicateException(Exception e) {
         Throwable cause = e.getCause();
@@ -277,7 +394,6 @@ public class BookCreatureService implements Serializable {
         }
         return false;
     }
-
 
 
     private void validateBookCreature(BookCreature bookCreature) {
