@@ -9,6 +9,8 @@ import jakarta.ejb.Stateless;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.*;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 
 import java.net.ConnectException;
@@ -240,6 +242,8 @@ public class BookCreatureService implements Serializable {
 
     @Inject
     private FileStorageService fileStorageService;
+    @Inject
+    private ImportHistoryService importHistoryService;
     private final ReentrantLock importLock = new ReentrantLock();
 
     public void importBookCreatures(List<BookCreature> bookCreatures, InputStream fileInputStream, String fileName, long fileSize) throws ConnectException {
@@ -257,15 +261,22 @@ public class BookCreatureService implements Serializable {
             connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
 
             try {
-                // 1-й этап: Загрузка файла в MinIO (подготовка, без коммита)
+                // Фаза 1: Загрузка файла в MinIO
                 uploadedFileName = fileStorageService.uploadFile(fileName, fileInputStream, fileSize);
                 fileUploadedSuccessfully = true;
 
-                // 2-й этап: Сохранение объектов в БД (подготовка, без коммита)
+                //TEST
+//                if (true) {
+//                    throw new RuntimeException("Ошибка при импорте: ошибка в бизнес-логике сервера");
+//                }
+
+
+                // Фаза 1: Сохранение объектов в БД (без коммита)
                 for (BookCreature bookCreature : bookCreatures) {
                     validateBookCreature(bookCreature);
                     em.persist(bookCreature);
                 }
+
                 em.flush();
 
             } catch (Exception e) {
@@ -284,12 +295,10 @@ public class BookCreatureService implements Serializable {
                 throw new RuntimeException("Ошибка при импорте данных (фаза подготовки): " + e.getMessage(), e);
             }
 
-            // 2-я фаза: Подтверждение изменений (коммит)
+            // Фаза 2: Фиксация
             try {
                 em.getTransaction().commit();
-
                 System.out.println("Файл успешно загружен в хранилище и данные сохранены в БД.");
-
             } catch (Exception commitException) {
                 if (em.getTransaction().isActive()) {
                     em.getTransaction().rollback();
@@ -314,6 +323,8 @@ public class BookCreatureService implements Serializable {
         }
     }
 
+
+
     private void handleServiceException(Exception e, EntityManager em, boolean fileUploadedSuccessfully, String uploadedFileName) {
         if (em.getTransaction().isActive()) {
             em.getTransaction().rollback();
@@ -327,6 +338,34 @@ public class BookCreatureService implements Serializable {
             }
         }
     }
+
+    @Inject
+    private HttpServletRequest request;
+    @Inject
+    private UserService userService;
+
+    public User getCurrentUser() {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            User sessionUser = (User) session.getAttribute("user");
+            if (sessionUser != null) {
+                return sessionUser;
+            }
+        }
+
+        String username = request.getHeader("X-Username");
+        String password = request.getHeader("X-Password");
+
+        if (username != null && password != null) {
+            User user = userService.findUserByUsername(username);
+            if (user != null && user.getPassword().equals(password)) {
+                return user;
+            }
+        }
+
+        return null;
+    }
+
 
 
 

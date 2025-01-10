@@ -89,6 +89,7 @@ public class FileImportBean implements Serializable {
 
         User currentUser = getCurrentUser();
         int addedObjects = 0;
+        String uploadedFileName = null;
 
         try (InputStream inputStream = uploadedFile.getInputStream()) {
             ByteArrayOutputStream buffer = new ByteArrayOutputStream();
@@ -99,27 +100,33 @@ public class FileImportBean implements Serializable {
             }
             byte[] fileData = buffer.toByteArray();
 
-            String uploadedFileName = fileStorageService.uploadFile(uploadedFile.getSubmittedFileName(),
-                    new ByteArrayInputStream(fileData), uploadedFile.getSize());
-
             List<BookCreature> bookCreatures = parseFile(new ByteArrayInputStream(fileData));
-
 
             checkForDuplicatesInFile(bookCreatures);
 
             List<String> duplicateNamesInDb = checkForDuplicatesInDatabase(bookCreatures);
             if (!duplicateNamesInDb.isEmpty()) {
                 addErrorMessage("Ошибка: Следующие имена уже существуют в базе данных: " + String.join(", ", duplicateNamesInDb));
-                importHistoryService.saveImportHistory(currentUser, "Неуспешно", addedObjects);
+                importHistoryService.saveImportHistory(currentUser, "Неуспешно", addedObjects, "-");
                 return;
             }
 
             for (BookCreature bookCreature : bookCreatures) {
                 if (!validateBookCreature(bookCreature)) {
                     addErrorMessage("Ошибка: Один или несколько объектов содержат некорректные данные. Импорт отменен.");
-                    importHistoryService.saveImportHistory(currentUser, "Неуспешно", addedObjects);
+                    importHistoryService.saveImportHistory(currentUser, "Неуспешно", addedObjects, "-");
                     return;
                 }
+            }
+
+            uploadedFileName = fileStorageService.uploadFile(uploadedFile.getSubmittedFileName(),
+                    new ByteArrayInputStream(fileData), uploadedFile.getSize());
+
+            ImportHistory importHistory = importHistoryService.saveImportHistory(currentUser, "В процессе", addedObjects, uploadedFileName);
+
+            for (BookCreature bookCreature : bookCreatures) {
+                bookCreature.setImported(true);
+                bookCreature.setImportHistory(importHistory);
             }
 
             bookCreatureService.importBookCreatures(bookCreatures, new ByteArrayInputStream(fileData),
@@ -130,11 +137,34 @@ public class FileImportBean implements Serializable {
             String status = (addedObjects > 0) ? "Успешно" : "Неуспешно";
             FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO,
                     addedObjects > 0 ? "Импорт успешно завершен." : "Импорт не завершён", null));
-            importHistoryService.saveImportHistory(currentUser, status, addedObjects);
+            importHistoryService.saveImportHistory(currentUser, status, addedObjects, uploadedFileName);
 
         } catch (Exception e) {
+            if (uploadedFileName != null) {
+                try {
+                    fileStorageService.deleteFile(uploadedFileName);
+                    System.out.println("Файл успешно удалён из MinIO после ошибки: " + uploadedFileName);
+                } catch (Exception deleteException) {
+                    System.err.println("Ошибка при удалении файла из MinIO: " + deleteException.getMessage());
+                }
+            }
+
+            if (e.getCause() instanceof org.eclipse.persistence.exceptions.DatabaseException ||
+                    e.getCause() instanceof org.postgresql.util.PSQLException) {
+                System.err.println("Ошибка базы данных: " + e.getMessage());
+                addErrorMessage("Ошибка базы данных: проверьте корректность таблиц и данных.");
+            } else {
+                addErrorMessage("Ошибка импорта: ");
+            }
+
             handleImportException(e, currentUser, addedObjects);
         }
+    }
+
+
+
+    public String getDownloadUrl(String fileName) {
+        return fileStorageService.generateDownloadUrl(fileName);
     }
 
     private void handleImportException(Exception e, User currentUser, int addedObjects) {
@@ -147,10 +177,10 @@ public class FileImportBean implements Serializable {
         } else if (rootCause instanceof java.net.ConnectException) {
             addErrorMessage("Отказ файлового хранилища. Пожалуйста, проверьте подключение.");
         } else {
-            addErrorMessage("Ошибка при импорте: " + rootCause.getMessage());
+            addErrorMessage("Ошибка при импорте: ошибка в бизнес-логике сервера");
         }
 
-        importHistoryService.saveImportHistory(currentUser, "Неуспешно", addedObjects);
+        importHistoryService.saveImportHistory(currentUser, "Неуспешно", addedObjects, "-");
     }
 
     private void addErrorMessage(String message) {
@@ -342,4 +372,6 @@ public class FileImportBean implements Serializable {
 
         return isValid;
     }
+
+
 }

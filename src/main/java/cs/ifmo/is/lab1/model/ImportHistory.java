@@ -18,6 +18,16 @@ public class ImportHistory {
     private int addedObjects; // Число успешно добавленных объектов
     private LocalDateTime timestamp;
 
+    private String fileName;
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
+
     public ImportHistory() {
         this.timestamp = LocalDateTime.now();
     }

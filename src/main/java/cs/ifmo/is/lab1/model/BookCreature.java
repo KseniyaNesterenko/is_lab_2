@@ -82,6 +82,29 @@ public class BookCreature implements Auditable {
 //        return sdf.parse(dateStr);
 //    }
 
+    private boolean imported;
+
+    // Геттеры и сеттеры
+    public boolean isImported() {
+        return imported;
+    }
+
+    public void setImported(boolean imported) {
+        this.imported = imported;
+    }
+
+    @ManyToOne
+    private ImportHistory importHistory;
+
+    public ImportHistory getImportHistory() {
+        return importHistory;
+    }
+
+    public void setImportHistory(ImportHistory importHistory) {
+        this.importHistory = importHistory;
+    }
+
+
     @PrePersist
     public void prePersist() {
         if (creationDate != null) {

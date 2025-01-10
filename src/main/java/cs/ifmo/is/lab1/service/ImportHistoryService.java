@@ -20,7 +20,7 @@ import java.util.List;
 public class ImportHistoryService implements Serializable {
 
     private EntityManagerFactory emf = Persistence.createEntityManagerFactory("IsLab1");
-    public void saveImportHistory(User user, String status, int addedObjects) {
+    public ImportHistory saveImportHistory(User user, String status, int addedObjects, String fileName) {
         EntityManager em = emf.createEntityManager();
         try {
             em.getTransaction().begin();
@@ -29,10 +29,12 @@ public class ImportHistoryService implements Serializable {
             importHistory.setUser(user);
             importHistory.setStatus(status);
             importHistory.setAddedObjects(addedObjects);
+            importHistory.setFileName(fileName); // Сохранение имени файла
 
             em.persist(importHistory);
             em.getTransaction().commit();
 
+            return importHistory;  // Возвращаем объект импорта
         } catch (Exception e) {
             if (em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
@@ -44,14 +46,23 @@ public class ImportHistoryService implements Serializable {
     }
 
 
+
     public List<ImportHistory> getImportHistory(User user, boolean isAdmin) {
         EntityManager em = emf.createEntityManager();
+        List<String> friendlyStatuses = List.of("Успешно", "Неуспешно");
+
         if (isAdmin) {
-            return em.createQuery("SELECT i FROM ImportHistory i ORDER BY i.timestamp ASC", ImportHistory.class)
+            return em.createQuery(
+                            "SELECT i FROM ImportHistory i WHERE i.status IN :statuses ORDER BY i.timestamp ASC",
+                            ImportHistory.class)
+                    .setParameter("statuses", friendlyStatuses)
                     .getResultList();
         } else {
-            return em.createQuery("SELECT i FROM ImportHistory i WHERE i.user = :user ORDER BY i.timestamp ASC", ImportHistory.class)
+            return em.createQuery(
+                            "SELECT i FROM ImportHistory i WHERE i.user = :user AND i.status IN :statuses ORDER BY i.timestamp ASC",
+                            ImportHistory.class)
                     .setParameter("user", user)
+                    .setParameter("statuses", friendlyStatuses)
                     .getResultList();
         }
     }
@@ -59,15 +70,22 @@ public class ImportHistoryService implements Serializable {
     public List<ImportHistory> getImportHistoryPaginated(User user, boolean isAdmin, int page, int pageSize) {
         EntityManager em = emf.createEntityManager();
         int startPosition = (page - 1) * pageSize;
+        List<String> friendlyStatuses = List.of("Успешно", "Неуспешно");
 
         if (isAdmin) {
-            return em.createQuery("SELECT i FROM ImportHistory i ORDER BY i.timestamp ASC", ImportHistory.class)
+            return em.createQuery(
+                            "SELECT i FROM ImportHistory i WHERE i.status IN :statuses ORDER BY i.timestamp ASC",
+                            ImportHistory.class)
+                    .setParameter("statuses", friendlyStatuses)
                     .setFirstResult(startPosition)
                     .setMaxResults(pageSize)
                     .getResultList();
         } else {
-            return em.createQuery("SELECT i FROM ImportHistory i WHERE i.user = :user ORDER BY i.timestamp ASC", ImportHistory.class)
+            return em.createQuery(
+                            "SELECT i FROM ImportHistory i WHERE i.user = :user AND i.status IN :statuses ORDER BY i.timestamp ASC",
+                            ImportHistory.class)
                     .setParameter("user", user)
+                    .setParameter("statuses", friendlyStatuses)
                     .setFirstResult(startPosition)
                     .setMaxResults(pageSize)
                     .getResultList();
@@ -76,17 +94,23 @@ public class ImportHistoryService implements Serializable {
 
     public int getTotalImportHistoryCount(User user, boolean isAdmin) {
         EntityManager em = emf.createEntityManager();
+        List<String> friendlyStatuses = List.of("Успешно", "Неуспешно");
+
         try {
             if (isAdmin) {
-                return ((Long) em.createQuery("SELECT COUNT(i) FROM ImportHistory i").getSingleResult()).intValue();
+                return ((Long) em.createQuery(
+                                "SELECT COUNT(i) FROM ImportHistory i WHERE i.status IN :statuses")
+                        .setParameter("statuses", friendlyStatuses)
+                        .getSingleResult()).intValue();
             } else {
-                return ((Long) em.createQuery("SELECT COUNT(i) FROM ImportHistory i WHERE i.user = :user")
+                return ((Long) em.createQuery(
+                                "SELECT COUNT(i) FROM ImportHistory i WHERE i.user = :user AND i.status IN :statuses")
                         .setParameter("user", user)
+                        .setParameter("statuses", friendlyStatuses)
                         .getSingleResult()).intValue();
             }
         } finally {
             em.close();
         }
     }
-
 }

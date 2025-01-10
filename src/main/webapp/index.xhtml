@@ -386,6 +386,22 @@
                         <h:outputText value="#{bookCreature.ring.id}" styleClass="number-cell" />
                     </h:column>
                     <h:column>
+                        <f:facet name="header">
+                            Import
+                        </f:facet>
+                        <h:outputText value="#{bookCreature.importHistory == null ? 'No Import' : ''}" styleClass="text-center" />
+                        <h:outputLink value="#{bookCreature.importHistory != null ? fileImportBean.getDownloadUrl(bookCreature.importHistory.fileName) : ''}"
+                                      rendered="#{bookCreature.importHistory != null}"
+                                      download="true"
+                                      styleClass="text-center">
+                            ⬇
+                        </h:outputLink>
+                    </h:column>
+
+
+
+
+                    <h:column>
                         <f:facet name="header">Actions</f:facet>
                         <div class="action-container">
                             <h:commandButton value="✎" action="#{bookCreatureBean.edit(bookCreature.id)}"
@@ -523,6 +539,18 @@
                     <p:column headerText="Дата">
                         #{history.formattedTimestamp}
                     </p:column>
+                    <p:column headerText="Скачать файл">
+                        <h:panelGroup>
+                            <h:outputText value="-" rendered="#{history.status eq 'Неуспешно'}" />
+                            <h:outputLink value="#{fileImportBean.getDownloadUrl(history.fileName)}" rendered="#{history.status eq 'Успешно'}" download="true">
+                                Скачать
+                            </h:outputLink>
+                        </h:panelGroup>
+                    </p:column>
+
+
+
+
                 </p:dataTable>
             </div>
         </h:form>

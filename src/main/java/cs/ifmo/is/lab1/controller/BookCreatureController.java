@@ -4,8 +4,10 @@ import cs.ifmo.is.lab1.bean.FileImportBean;
 import cs.ifmo.is.lab1.dto.PaginatedResponse;
 import cs.ifmo.is.lab1.model.BookCreature;
 import cs.ifmo.is.lab1.model.BookCreatureType;
+import cs.ifmo.is.lab1.model.ImportHistory;
 import cs.ifmo.is.lab1.model.User;
 import cs.ifmo.is.lab1.service.BookCreatureService;
+import cs.ifmo.is.lab1.service.ImportHistoryService;
 import io.minio.errors.MinioException;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityExistsException;
@@ -170,6 +172,9 @@ public class BookCreatureController {
         return Response.ok("Controller is working!").build();
     }
 
+    @Inject
+    private ImportHistoryService importHistoryService;
+
     @POST
     @Path("/import")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -180,6 +185,7 @@ public class BookCreatureController {
         try {
             if (fileInputStream == null) {
                 System.out.println("No file provided for import.");
+                importHistoryService.saveImportHistory(fileImportBean.getCurrentUser(), "Неуспешно", 0, "-");
                 return Response.status(Response.Status.BAD_REQUEST)
                         .entity("Пожалуйста, выберите файл для импорта.")
                         .build();
@@ -200,6 +206,7 @@ public class BookCreatureController {
             byte[] fileData = buffer.toByteArray();
             User currentUser = fileImportBean.getCurrentUser();
             if (currentUser == null) {
+                importHistoryService.saveImportHistory(null, "Неуспешно", 0, "-");
                 return Response.status(Response.Status.UNAUTHORIZED)
                         .entity("Пользователь не авторизован.")
                         .build();
@@ -209,9 +216,17 @@ public class BookCreatureController {
             fileImportBean.checkForDuplicatesInFile(bookCreatures);
             List<String> duplicateNamesInDb = fileImportBean.checkForDuplicatesInDatabase(bookCreatures);
             if (!duplicateNamesInDb.isEmpty()) {
+                importHistoryService.saveImportHistory(currentUser, "Неуспешно", 0, "-");
                 return Response.status(Response.Status.CONFLICT)
                         .entity("Ошибка: Следующие имена уже существуют в базе данных: " + String.join(", ", duplicateNamesInDb))
                         .build();
+            }
+
+            ImportHistory importHistory = importHistoryService.saveImportHistory(currentUser, "В процессе", 0, fileName);
+
+            for (BookCreature bookCreature : bookCreatures) {
+                bookCreature.setImported(true);
+                bookCreature.setImportHistory(importHistory);
             }
 
             bookCreatureService.importBookCreatures(
@@ -221,9 +236,19 @@ public class BookCreatureController {
                     fileData.length
             );
 
+            int addedObjects = bookCreatures.size();
+            String status = (addedObjects > 0) ? "Успешно" : "Неуспешно";
+            importHistory.setStatus(status);
+            importHistory.setAddedObjects(addedObjects);
+
+            if (addedObjects > 0) {
+                importHistoryService.saveImportHistory(currentUser, "Успешно", addedObjects, fileName);
+            }
+
             return Response.ok("Импорт успешно завершён. Загружено объектов: " + bookCreatures.size()).build();
 
         } catch (Exception e) {
+            importHistoryService.saveImportHistory(fileImportBean.getCurrentUser(), "Неуспешно", 0, "-");
             return handleImportException(e);
         }
     }
